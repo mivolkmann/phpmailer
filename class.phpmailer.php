@@ -1183,8 +1183,6 @@ class phpmailer
 
             if($disposition == "inline")
                 $mime[] = sprintf("Content-ID: <%s>%s", $cid, $this->LE);
-            else
-                $mime[] = sprintf("Content-ID: <%s>%s", $name, $this->LE);
 
             $mime[] = sprintf("Content-Disposition: %s; filename=\"%s\"%s", 
                               $disposition, $name, $this->LE.$this->LE);
@@ -1623,7 +1621,7 @@ class Boundary
         {
             $mime[] = sprintf("Content-Disposition: %s;");
             if(strlen($this->FileName) > 0)
-                $mime[] = sprinf("filename=\"%s\"", $this->$this->FileName);
+                $mime[] = sprinf("filename=\"%s\"", $this->FileName);
         }
         
         if($bLineEnding)
