@@ -1,5 +1,13 @@
 ChangeLog
 
+Version 1.70 (Mon, Jun 20 2003)
+* Added SMTP keep-alive support
+* Added IsError method for error detection
+* Added error message translation support (SetLanguage)
+* Refactored many methods to increase library performance
+* Hello now sends the newer EHLO message before HELO as per RFC 2821
+* Removed the boundary class and replaced it with GetBoundary
+* Removed queue support methods
 * New $Hostname variable
 * New Message-ID header
 * Received header reformat
@@ -10,6 +18,7 @@ ChangeLog
 * quoted-encoding should now encode NULs \000
 * Fixed encoding of body/AltBody (#553370)
 * Adds "To: undisclosed-recipients:;" when all recipients are hidden (BCC)
+* Multiple bug fixes
 
 Version 1.65 (Fri, Aug 09 2002)
 * Fixed non-visible attachment bug (#585097) for Outlook
