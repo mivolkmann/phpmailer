@@ -965,7 +965,10 @@ class phpmailer
 
         $header[] = sprintf("X-Priority: %d%s", $this->Priority, $this->LE);
         $header[] = sprintf("X-Mailer: phpmailer [version %s]%s", $this->Version, $this->LE);
-        $header[] = sprintf("Return-Path: %s%s", trim($this->From), $this->LE);
+	if($this->Sender == "")
+            $header[] = sprintf("Return-Path: %s%s", trim($this->From), $this->LE);
+        else
+            $header[] = sprintf("Return-Path: %s%s", trim($this->Sender), $this->LE);
         
         if($this->ConfirmReadingTo != "")
             $header[] = sprintf("Disposition-Notification-To: <%s>%s", 
