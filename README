@@ -6,8 +6,10 @@ Please read LICENSE for information on this softwares availability and
 distribution.
 
 Class Features:
-- Can send HTML emails, multiple attachments, use multiple main and
+- Can send HTML emails, multiple attachments from the file system 
+or from a string or database, use multiple main and
 backup SMTP servers, wrap emails for Pine and Kmail client users
+- Now with SMTP authentication and multipart/alternative support
 - Can send using three different mail methods: via a SMTP class, the
 /usr/sbin/sendmail program (and the qmail equivalent), and the PHP
 mail() function. This can be changed without changing any existing
@@ -51,7 +53,7 @@ Example
 <?php
 require("class.phpmailer.php");
 
-$mail = new phpmailer;
+$mail = new phpmailer();
 
 $mail->IsSMTP();                                      // set mailer to use SMTP
 $mail->From = "from@email.com";
@@ -66,7 +68,8 @@ $mail->AddAttachment("/tmp/image.jpg", "new.jpg");    // optional name
 
 $mail->IsHTML(true);                                  // set email format to HTML
 $mail->Subject = "Here is the subject";
-$mail->Body = "This is the message body <b>in bold!</b>";
+$mail->Body    = "This is the HTML message body <b>in bold!</b>";
+$mail->AltBody = "This is the body in plain text for non-HTML mail clients"; 
 
 if(!$mail->Send())
 {
