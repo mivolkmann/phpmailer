@@ -519,8 +519,11 @@ class PHPMailer
         $error = "";
         $bad_rcpt = array();
 
-        if($this->smtp == NULL) { $this->SmtpConnect(); }
-        if($this->smtp->Connected() == false) { $this->SmtpConnect(); }
+        if($this->smtp == NULL)
+        {
+            if(!$this->SmtpConnect())
+                return false;
+        }
 
         // Must perform HELO before authentication
         if ($this->Helo != '')
@@ -600,11 +603,10 @@ class PHPMailer
      */
     function SmtpConnect() {
         if($this->smtp == NULL) { $this->smtp = new SMTP(); }
-        $this->smtp->do_debug = $this->SMTPDebug;
 
+        $this->smtp->do_debug = $this->SMTPDebug;
         $hosts = explode(";", $this->Host);
         $index = 0;
-        
         $connection = ($this->smtp->Connected()) ? true : false; 
 
         // Retry while there is no connection
@@ -623,12 +625,9 @@ class PHPMailer
             $index++;
         }
         if(!$connection)
-        {
-            $this->error_handler("SMTP Error: could not connect to SMTP host server(s)");
-            return false;
-        }
-        else
-            return true;
+            $this->error_handler("SMTP Error: could not connect to SMTP host");
+
+        return $connection;
     }
 
     /**
@@ -815,6 +814,11 @@ class PHPMailer
         $this->boundary[1] = "b1_" . $uniq_id;
         $this->boundary[2] = "b2_" . $uniq_id;
 
+        if($this->Sender == "")
+            $header[] = sprintf("Return-Path: %s%s", trim($this->From), $this->LE);
+        else
+            $header[] = sprintf("Return-Path: %s%s", trim($this->Sender), $this->LE);
+        
         // To be created automatically by mail()
         if($this->Mailer != "mail")
         {
@@ -846,10 +850,6 @@ class PHPMailer
         $header[] = sprintf("Message-ID: <%s@%s>%s", $uniq_id, $this->ServerHostname(), $this->LE);
         $header[] = sprintf("X-Priority: %d%s", $this->Priority, $this->LE);
         $header[] = sprintf("X-Mailer: PHPMailer [version %s]%s", $this->Version, $this->LE);
-        if($this->Sender == "")
-            $header[] = sprintf("Return-Path: %s%s", trim($this->From), $this->LE);
-        else
-            $header[] = sprintf("Return-Path: %s%s", trim($this->Sender), $this->LE);
         
         if($this->ConfirmReadingTo != "")
         {
