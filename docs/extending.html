@@ -30,7 +30,7 @@ class my_phpmailer extends phpmailer {
 	var $From = "from@email.com";
 	var $FromName = "Mailer";
 	var $Host = "smtp1.site.com;smtp2.site.com";
-	var $Mailer = "smtp";
+	var $Mailer = "sendmail";  // Alternative to IsSendmail()
 	var $WordWrap = 75;
 	
 	// Replace the default error_handler

@@ -2,7 +2,7 @@
 /////////////////////////////////////////////////
 // phpmailer - PHP email class
 // 
-// Version 0.92, 04/16/2001
+// Version 0.98, 05/22/2001
 //
 // Class for sending email using either 
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -20,24 +20,19 @@ class phpmailer
 	/////////////////////////////////////////////////
 	
 	// General Variables
-	var $Priority    = 3;
-	var $CharSet     = "iso-8859-1";
-	var $ContentType = "text/plain";
-	var $Encoding    = "8bit";
-	var $From        = "root@localhost";
-	var $FromName    = "root";
-	var $to          = array();
-	var $cc          = array();
-	var $bcc         = array();
-	var $ReplyTo     = array();
-	var $Subject     = "";
-	var $Body        = "";
-	var $WordWrap    = false;
-	var $mailer      = "mail";
-	var $sendmail    = "/usr/sbin/sendmail";
-	var $attachment  = array();
-	var $boundary    = false;
-	var $MailerDebug = true;
+	var $Priority         = 3;
+	var $CharSet          = "iso-8859-1";
+	var $ContentType      = "text/plain";
+	var $Encoding         = "8bit";
+	var $From             = "root@localhost";
+	var $FromName         = "root";
+	var $Subject          = "";
+	var $Body             = "";
+	var $WordWrap         = false;
+	var $Mailer           = "mail";
+	var $sendmail         = "/usr/sbin/sendmail";
+	var $MailerDebug      = true;
+	var $UseMSMailHeaders = false;
 
 	// SMTP-specific variables
 	var $Host        = "localhost";
@@ -46,7 +41,16 @@ class phpmailer
 	var $Timeout     = 10; // Socket timeout in sec.
 	var $SMTPDebug   = false;
 	
-
+	// "Private" variables
+	var $Version       = "phpmailer [version .98]";
+	var $to            = array();
+	var $cc            = array();
+	var $bcc           = array();
+	var $ReplyTo       = array();
+	var $attachment    = array();
+	var $CustomHeader  = array();	
+	var $boundary      = false;
+	
 	/////////////////////////////////////////////////
 	// VARIABLE METHODS
 	/////////////////////////////////////////////////
@@ -140,7 +144,7 @@ class phpmailer
 	function sendmail_send($header, $body) {
 		$sendmail = sprintf("%s -f %s -t", $this->sendmail, $this->From);
 
-		if(!$mail = popen($sendmail, "w"))
+		if(!@$mail = popen($sendmail, "w"))
 			$this->error_handler(sprintf("Could not open %s", $this->sendmail));
 		
 		fputs($mail, $header);
@@ -159,7 +163,7 @@ class phpmailer
 		for($x = 0; $x < count($this->bcc); $x++)
 			$to .= sprintf(",%s", $this->bcc[$x][0]);
 		
-		if(!mail($to, $this->Subject, $body, $header))
+		if(!@mail($to, $this->Subject, $body, $header))
 			$this->error_handler("Could not instantiate mail()");
 	}
 	
@@ -172,17 +176,19 @@ class phpmailer
 		
 		// Try to connect to all SMTP servers
 		$hosts = explode(";", $this->Host);
-		$x = 0;
+		$index = 0;
 		$connection = false;
-		while($x < count($hosts))
+		
+		// Retry while there is no connection
+		while($index < count($hosts) && $connection == false)
 		{
-			if($smtp->Connect($hosts[$x], $this->Port, $this->Timeout))
+			if($smtp->Connect($hosts[$index], $this->Port, $this->Timeout))
 			{
 				$connection = true;
 				break;
 			}
-			// printf("%s host could not connect<br>", $hosts[$x]); //debug only
-			$x++;
+			//printf("%s host could not connect<br>", $hosts[$index]); //debug only
+			$index++;
 		}
 		if(!$connection)
 			$this->error_handler("SMTP Error: could not connect to SMTP host server(s)");
@@ -266,21 +272,27 @@ class phpmailer
 			$header[] = $this->addr_append("Reply-to", $this->ReplyTo);
 		$header[] = sprintf("Subject: %s\n", trim($this->Subject));
 		$header[] = sprintf("X-Priority: %d\n", $this->Priority);
-		$header[] = sprintf("X-Mailer: phpmailer [version .9]\n");
+		$header[] = sprintf("X-Mailer: %s\n", $this->Version);
 		$header[] = sprintf("Content-Transfer-Encoding: %s\n", $this->Encoding);
 		$header[] = sprintf("Return-Path: %s\n", trim($this->From));
-		// $header[] = sprintf("Content-Length: %d\n", (strlen($this->Body) * 7));
+		
+		// Add custom headers
+		for($index = 0; $index < count($this->CustomHeader); $index++)
+		   $header[] = sprintf("%s\n", $this->CustomHeader[$index]);
+		
+		if($this->UseMSMailHeaders)
+		   $header[] = $this->AddMSMailHeaders();
+		
+		// Add all attachments
 		if(count($this->attachment) > 0)
 		{
 			$header[] = sprintf("Content-Type: Multipart/Mixed; charset = \"%s\";\n", $this->CharSet);
 			$header[] = sprintf(" boundary=\"Boundary-=%s\"\n", $this->boundary);
 		}
 		else
-		{
 			$header[] = sprintf("Content-Type: %s; charset = \"%s\";\n", $this->ContentType, $this->CharSet);
-		}
-		$header[] = "MIME-Version: 1.0\n\n";
 		
+		$header[] = "MIME-Version: 1.0\n\n";
 		return(join("", $header));
 	}
 
@@ -305,7 +317,7 @@ class phpmailer
 
 	// Check if attachment is valid and add to list			
 	function AddAttachment($path) {
-		if(!is_file($path))
+		if(!@is_file($path))
 			$this->error_handler(sprintf("Could not find %s file on filesystem", $path));
 
 		// Separate file name from full path
@@ -357,7 +369,7 @@ class phpmailer
 	
 	// Encode attachment in base64 format
 	function encode_file ($path) {
-		if(!$fd = fopen($path, "r"))
+		if(!@$fd = fopen($path, "r"))
 			$this->error_handler("File Error: Could not open file %s", $path);
 		$file = fread($fd, filesize($path));
 		
@@ -381,6 +393,33 @@ class phpmailer
 			printf("<font color=\"FF0000\">%s</font>", $msg);
 			exit;
 		}
+	}
+	
+	// Add a custom header
+	function AddCustomHeader($custom_header) {
+	   $this->CustomHeader[] = $custom_header;
+	}
+	
+	// Add all the Microsoft message headers
+	function AddMSMailHeaders() {
+	   $MSHeader = "";
+	   if($this->Priority == 1)
+	      $MSPriority = "High";
+	   elseif($this->Priority == 5)
+	      $MSPriority = "Low";
+	   else
+	      $MSPriority = "Medium";
+	      
+	   $MSHeader .= sprintf("X-MSMail-Priority: %s\n", $MSPriority);
+	   $MSHeader .= sprintf("Importance: %s\n", $MSPriority);
+	   // X-Priority: 1 (Highest)
+	   return($MSHeader);
+	}
+	
+	// Print out the version number of phpmailer
+	function PrintVersion() {
+	   //printf("<h5><a href=\"http://phpmailer.sourceforge.net\">%s</a></h5>", $this->Version);
+	   printf("%s", $this->Version);
 	}
 }
 
