@@ -1,5 +1,10 @@
 ChangeLog
 
+Version 1.43 (Tue, Sep 25 2001)
+* Fixed AddStringAttachment encoding
+* Fixed possible header name quote bug
+* Fixed wordwrap() trim bug
+
 Version 1.41 (Wed, Aug 22 2001)
 * Fixed AltBody bug w/o attachments
 * Fixed rfc_date() for certain mail servers
