@@ -24,6 +24,9 @@ define("PROG_VERSION", "0.01");
 define("PROG_NAME", $cargv[0]);
 set_time_limit(0); // unlimited
 
+// Ignore warning messages
+error_reporting(E_ERROR);
+
 /**
  * mailerc - mailerc extension class
  * @author Brent R. Matzelle
