@@ -574,7 +574,13 @@ class phpmailer
 
         fputs($mail, $header);
         fputs($mail, $body);
-        pclose($mail);
+        
+        $result = pclose($mail) >> 8 & 0xFF;
+        if($result != 0)
+        {
+            $this->error_handler(sprintf("Could not execute %s", $this->Sendmail));
+            return false;
+        }
 
         return true;
     }
@@ -745,13 +751,13 @@ class phpmailer
      * @returns string
      */
     function addr_append($type, $addr) {
-        $addr_str = "";
-        $addr_str .= sprintf("%s: \"%s\" <%s>", $type, addslashes($addr[0][1]), $addr[0][0]);
+        $addr_str = $type . ": ";
+        $addr_str .= $this->addr_format($addr[0]);
         if(count($addr) > 1)
         {
             for($i = 1; $i < count($addr); $i++)
             {
-                $addr_str .= sprintf(", \"%s\" <%s>", addslashes($addr[$i][1]), $addr[$i][0]);
+                $addr_str .= sprintf(", %s", $this->addr_format($addr[$i]));
             }
             $addr_str .= "\r\n";
         }
@@ -776,6 +782,20 @@ class phpmailer
         }
         
         return $addr_list;
+    }
+    
+    /**
+     * Formats an address correctly. 
+     * @private
+     * @returns string
+     */
+    function addr_format($addr) {
+        if(empty($addr[1]))
+            $formatted = $addr[0];
+        else
+            $formatted = sprintf('"%s" <%s>', addslashes($addr[1]), $addr[0]);
+
+        return $formatted;
     }
 
     /**
