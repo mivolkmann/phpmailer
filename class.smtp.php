@@ -14,22 +14,40 @@
 ////////////////////////////////////////////////////
 
 /**
- * STMP is rfc 821 compliant and implements all the rfc 821 SMTP
+ * SMTP is rfc 821 compliant and implements all the rfc 821 SMTP
  * commands except TURN which will always return a not implemented
  * error. SMTP also provides some utility methods for sending mail
  * to an SMTP server.
+ * @package PHPMailer
  * @author Chris Ryan
  */
 class SMTP
 {
-    var $SMTP_PORT = 25; # the default SMTP PORT
-    var $CRLF = "\r\n";  # CRLF pair
+    /**
+     *  SMTP server port
+     *  @var int
+     */
+    var $SMTP_PORT = 25;
+    
+    /**
+     *  SMTP reply line ending
+     *  @var string
+     */
+    var $CRLF = "\r\n";
+    
+    /**
+     *  Sets whether debugging is turned on
+     *  @var bool
+     */
+    var $do_debug;       # the level of debug to perform
 
+    /**#@+
+     * @access private
+     */
     var $smtp_conn;      # the socket to the server
     var $error;          # error if any on the last call
     var $helo_rply;      # the reply the server sent to us for HELO
-
-    var $do_debug;       # the level of debug to perform
+    /**#@-*/
 
     /**
      * Initialize the class so that the data is in a known state.
