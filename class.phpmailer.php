@@ -661,7 +661,7 @@ class phpmailer
          // Set message boundary
          $this->boundary = "_b" . md5(uniqid(time()));
 
-         $header[] = sprintf("Content-Type: Multipart/Mixed;\r\n", $this->CharSet);
+         $header[] = "Content-Type: Multipart/Mixed;\r\n";
          $header[] = sprintf(" boundary=\"Boundary-=%s\"\r\n\r\n", $this->boundary);
       }
       else
@@ -727,6 +727,7 @@ class phpmailer
       $this->attachment[$cur][2] = $name;
       $this->attachment[$cur][3] = $encoding;
       $this->attachment[$cur][4] = $type;
+      $this->attachment[$cur][5] = false; // isStringAttachment
 
       return true;
    }
@@ -751,7 +752,16 @@ class phpmailer
       // Add all attachments
       for($i = 0; $i < count($this->attachment); $i++)
       {
-         $path = $this->attachment[$i][0];
+         // Check for string attachment
+         $isString = $this->attachment[$i][5];
+         if ($isString)
+         {
+            $string = $this->attachment[$i][0];
+         }
+         else
+         {
+            $path = $this->attachment[$i][0];
+         }
          $filename = $this->attachment[$i][1];
          $name = $this->attachment[$i][2];
          $encoding = $this->attachment[$i][3];
@@ -761,8 +771,18 @@ class phpmailer
          $mime[] = sprintf("name=\"%s\"\r\n", $name);
          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n", $encoding);
          $mime[] = sprintf("Content-Disposition: attachment; filename=\"%s\"\r\n\r\n", $name);
-         if(!$mime[] = sprintf("%s\r\n\r\n", $this->encode_file($path, $encoding)))
-            return false;
+
+         // Encode as string attachment
+         if($isString)
+         {
+            if(!$mime[] = sprintf("%s\r\n\r\n", $this->encode_string($string, $encoding)))
+               return false;
+         }
+         else
+         {
+            if(!$mime[] = sprintf("%s\r\n\r\n", $this->encode_file($path, $encoding)))
+               return false;
+         }
       }
       $mime[] = sprintf("\r\n--Boundary-=%s--\r\n", $this->boundary);
 
@@ -842,6 +862,26 @@ class phpmailer
       $encoded = $this->WordWrap($encoded, 74, true);
 
       return $encoded;
+   }
+   
+   /**
+   * Adds the string attachment to the list. This method can be used 
+   * to attach ascii data.  It can also attach binary data, such as 
+   * a BLOB record from a database. Always returns true.
+   * @public
+   * @returns bool
+   */
+   function AddStringAttachment($string, $filename, $encoding = "base64", $type = "application/octet-stream") {
+      // Append to $attachment array
+      $cur = count($this->attachment);
+      $this->attachment[$cur][0] = $string;
+      $this->attachment[$cur][1] = $filename;
+      $this->attachment[$cur][2] = $filename;
+      $this->attachment[$cur][3] = $encoding;
+      $this->attachment[$cur][4] = $type;
+      $this->attachment[$cur][5] = true; // isString
+      
+      return true;
    }
 
    /////////////////////////////////////////////////
