@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.48, Created 11/08/2001
+// Version 1.50, Created 11/08/2001
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -108,11 +108,11 @@ class phpmailer
     var $AltBody           = "";
 
     /**
-     * Sets word wrapping on the message. Default value is false (off).
+     * Sets word wrapping on the message. Default value is 0 (off).
      * @public
-     * @type bool
+     * @type int
      */
-    var $WordWrap          = false;
+    var $WordWrap          = 0;
 
     /**
      * Method to send mail: ("mail", "sendmail", or "smtp").
@@ -142,7 +142,7 @@ class phpmailer
      *  @public
      *  @type string
      */
-    var $Version           = "1.48";
+    var $Version           = "1.50";
 
 
     /////////////////////////////////////////////////
