@@ -1,5 +1,9 @@
 ChangeLog
 
+Version 1.08 (Tue, June 05 2001)
+* Added enhanced error-checking
+* Added phpdoc documentation to source
+
 Version 1.06 (Fri, Jun 01 2001)
 * Added optional name for file attachments
 

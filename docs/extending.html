@@ -67,7 +67,12 @@ $mail->AddAddress("josh@site.com", "Josh Adams");
 $mail->Subject = "Here is the subject";
 $mail->Body = "This is the message body";
 $mail->AddAttachment("c:/temp/11-10-00.zip", "new_name.zip");  // optional name
-$mail->Send();
+
+if(!$mail->Send())
+{
+   echo "There was an error sending the message";
+   exit;
+}
 
 echo "Message was sent successfully";
 </pre>
