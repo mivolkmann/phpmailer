@@ -10,7 +10,6 @@
 //
 // License: LGPL, see LICENSE
 ////////////////////////////////////////////////////
-require("phpmailer.lang.php");   
 
 /**
  * PHPMailer - PHP email transport class
@@ -226,6 +225,8 @@ class PHPMailer
     var $CustomHeader    = array();
     var $message_type    = "";
     var $boundary        = array();
+    var $language        = array();
+    var $error_count     = 0;
     /**#@-*/
     
     /////////////////////////////////////////////////
@@ -602,7 +603,31 @@ class PHPMailer
             }
         }
     }
+
+    /**
+     * Sets the language for all class error messages.  Returns false 
+     * if it cannot load the language file.  The default language type
+     * is English.
+     * @param string $lang_type Type of language (e.g. Portuguese: "br")
+     * @param string $lang_path Path to the language file directory
+     * @access public
+     * @return bool
+     */
+    function SetLanguage($lang_type, $lang_path = "") {
+        if(file_exists($lang_path.'phpmailer.lang-'.$lang_type.'.php'))
+            include($lang_path.'phpmailer.lang-'.$lang_type.'.php');
+        else if(file_exists($lang_path.'phpmailer.lang-en.php'))
+            include($lang_path.'phpmailer.lang-en.php');
+        else
+        {
+            $this->error_handler("Could not load language file");
+            return false;
+        }
+        $this->language = $PHPMAILER_LANG;
     
+        return true;
+    }
+
     /////////////////////////////////////////////////
     // MESSAGE CREATION METHODS
     /////////////////////////////////////////////////
@@ -1379,6 +1404,7 @@ class PHPMailer
      * @return void
      */
     function error_handler($msg) {
+        $this->error_count++;
         $this->ErrorInfo = $msg;
     }
 
@@ -1473,8 +1499,13 @@ class PHPMailer
      * @return string
      */
     function Lang($key) {
-        global $PHPMAILER_LANG;
-        return $PHPMAILER_LANG[$key];
+        if(count($this->language) < 1)
+            $this->SetLanguage("en"); // set the default language
+    
+        if(isset($this->language[$key]))
+            return $this->language[$key];
+        else
+            return "";
     }
     
     /**
@@ -1482,10 +1513,7 @@ class PHPMailer
      * @return bool
      */
     function IsError() {
-        if(strlen($this->ErrorInfo) > 0)
-            return true;
-        else
-            return false;
+        return ($this->error_count > 0);
     }
 
     /**
