@@ -6,13 +6,17 @@
 // sendmail, PHP mail(), or SMTP.  Methods are
 // based upon the standard AspEmail(tm) classes.
 //
+// Copyright (C) 2001 - 2003  Brent R. Matzelle
+//
 // License: LGPL, see LICENSE
 ////////////////////////////////////////////////////
 require("phpmailer.lang.php");   
 
 /**
  * PHPMailer - PHP email transport class
+ * @package PHPMailer
  * @author Brent R. Matzelle
+ * @copyright 2001 - 2003 Brent R. Matzelle
  */
 class PHPMailer
 {
@@ -210,71 +214,19 @@ class PHPMailer
      */
     var $SMTPKeepAlive = false;
 
-    /////////////////////////////////////////////////
-    // PRIVATE VARIABLES
-    /////////////////////////////////////////////////
-
-    /**
-     * Holds the SMTP instance.
+    /**#@+
      * @access private
-     * @var SMTP
      */
     var $smtp            = NULL;
-    
-    /**
-     *  Holds all "To" addresses.
-     *  @access private
-     *  @var array
-     */
     var $to              = array();
-
-    /**
-     *  Holds all "CC" addresses.
-     *  @access private
-     *  @var array
-     */
     var $cc              = array();
-
-    /**
-     *  Holds all "BCC" addresses.
-     *  @access private
-     *  @var array
-     */
     var $bcc             = array();
-
-    /**
-     *  Holds all "Reply-To" addresses.
-     *  @var array
-     */
     var $ReplyTo         = array();
-
-    /**
-     *  Holds all string and binary attachments.
-     *  @access private
-     *  @var array
-     */
     var $attachment      = array();
-
-    /**
-     *  Holds all custom headers.
-     *  @access private
-     *  @var array
-     */
     var $CustomHeader    = array();
-
-    /**
-     *  Holds the type of the message.
-     *  @access private
-     *  @var string
-     */
     var $message_type    = "";
-
-    /**
-     *  Holds the message boundaries.
-     *  @access private
-     *  @var string array
-     */
     var $boundary        = array();
+    /**#@-*/
     
     /////////////////////////////////////////////////
     // VARIABLE METHODS
@@ -282,6 +234,7 @@ class PHPMailer
 
     /**
      * Sets message type to HTML.  
+     * @param bool $bool
      * @return void
      */
     function IsHTML($bool) {
@@ -331,6 +284,8 @@ class PHPMailer
 
     /**
      * Adds a "To" address.  
+     * @param string $address
+     * @param string $name
      * @return void
      */
     function AddAddress($address, $name = "") {
@@ -345,6 +300,8 @@ class PHPMailer
      * mailer.  This is a PHP bug that has been submitted
      * on http://bugs.php.net. The *NIX version of PHP
      * functions correctly. 
+     * @param string $address
+     * @param string $name
      * @return void
     */
     function AddCC($address, $name = "") {
@@ -359,7 +316,8 @@ class PHPMailer
      * mailer.  This is a PHP bug that has been submitted
      * on http://bugs.php.net. The *NIX version of PHP
      * functions correctly.
-     * Returns void.
+     * @param string $address
+     * @param string $name
      * @return void
      */
     function AddBCC($address, $name = "") {
@@ -370,6 +328,8 @@ class PHPMailer
 
     /**
      * Adds a "Reply-to" address.  
+     * @param string $address
+     * @param string $name
      * @return void
      */
     function AddReplyTo($address, $name = "") {
@@ -534,6 +494,7 @@ class PHPMailer
             if(!$this->smtp->Authenticate($this->Username, $this->Password))
             {
                 $this->error_handler($this->Lang("authenticate"));
+                $this->smtp->Reset();
                 return false;
             }
         }
@@ -1013,10 +974,12 @@ class PHPMailer
 
     /**
      * Adds an attachment from a path on the filesystem.
-     * Checks if attachment is valid and then adds
-     * the attachment to the list.
      * Returns false if the file could not be found
      * or accessed.
+     * @param string $path Path to the attachment.
+     * @param string $name Overrides the attachment name.
+     * @param string $encoding File encoding (see $Encoding).
+     * @param string $type File extension type.
      * @return bool
      */
     function AddAttachment($path, $name = "", $encoding = "base64", 
@@ -1267,6 +1230,10 @@ class PHPMailer
      * Adds a string or binary attachment (non-filesystem) to the list.
      * This method can be used to attach ascii or binary data,
      * such as a BLOB record from a database.
+     * @param string $string String attachment data.
+     * @param string $filename Name of the attachment.
+     * @param string $encoding File encoding (see $Encoding).
+     * @param string $type File extension type.
      * @return void
      */
     function AddStringAttachment($string, $filename, $encoding = "base64", 
@@ -1285,9 +1252,13 @@ class PHPMailer
     
     /**
      * Adds an embedded attachment.  This can include images, sounds, and 
-     * just about any other document.  
-     * @param cid this is the Content Id of the attachment.  Use this to identify
+     * just about any other document.
+     * @param string $path Path to the attachment.
+     * @param string $cid Content ID of the attachment.  Use this to identify 
      *        the Id for accessing the image in an HTML form.
+     * @param string $name Overrides the attachment name.
+     * @param string $encoding File encoding (see $Encoding).
+     * @param string $type File extension type.
      * @return bool
      */
     function AddEmbeddedImage($path, $cid, $name = "", $encoding = "base64", 
