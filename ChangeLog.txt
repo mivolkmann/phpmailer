@@ -1,5 +1,21 @@
 ChangeLog
 
+Version 1.15 (Fri, Jun 15 2001)
+[Note: these changes contributed by Patrice Fournier]
+* Changed all remaining \n to \r\n
+* Bcc: header no longer writen to message except
+when sent directly to sendmail
+* Added a small message to non-MIME compliant mail reader
+* Added Sender variable to change the Sender email
+used in -f for sendmail/mail and in 'MAIL FROM' for smtp mode
+* Changed boundary setting to a place it will be set only once
+* Removed transfer encoding for whole message when using multipart
+* Message body now uses Encoding in multipart messages
+* Can set encoding and type to attachments 7bit, 8bit
+and binary attachment are sent as is, base64 are encoded
+* Can set Encoding to base64 to send 8 bits body
+through 7 bits servers
+
 Version 1.10 (Tue, Jun 12 2001)
 * Fixed win32 mail header bug (printed out headers in message body)
 
@@ -41,5 +57,5 @@ Version 0.92 (Tue, May 15 2001)
 * Fixed problem where body not being printed when a message is attached
 * Several small bug fixes
 
-Version 0.9 (Tue, April 17 2001)
+Version 0.90 (Tue, April 17 2001)
 * Intial public release
