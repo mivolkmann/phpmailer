@@ -1,5 +1,6 @@
 ChangeLog
 
+* Removed extra spaces in Content-Type definition (#667182)
 * Return-Path should be set to Sender when set
 * Adds Q or B encoding to headers when necessary
 * quoted-encoding should now encode NULs \000
