@@ -66,7 +66,7 @@ $mail->AddAttachment("/tmp/image.jpg", "new.jpg");    // optional name
 
 $mail->IsHTML(true);                                  // set email format to HTML
 $mail->Subject = "Here is the subject";
-$mail->Body = "This is the message body";
+$mail->Body = "This is the message body <b>in bold!</b>";
 
 if(!$mail->Send())
 {
