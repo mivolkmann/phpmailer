@@ -939,8 +939,11 @@ class phpmailer
         if(($this->Mailer != "mail") && (count($this->to) > 0))
             $header[] = $this->addr_append("To", $this->to);
 
-        $header[] = sprintf("From: \"%s\" <%s>%s", addslashes($this->FromName), 
-                            trim($this->From), $this->LE);
+        $from = array();
+        $from[0][0] = trim($this->From);
+        $from[0][1] = addslashes($this->FromName);
+        $header[] = $this->addr_append("From", $from); 
+
         if(count($this->cc) > 0)
             $header[] = $this->addr_append("Cc", $this->cc);
 
