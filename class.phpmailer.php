@@ -201,11 +201,25 @@ class PHPMailer
      */
     var $SMTPDebug    = false;
 
+    /**
+     * Prevents the SMTP connection from being closed after each mail 
+     * sending.  If this is set to true then to close the connection 
+     * requires an explicit call to SmtpClose(). 
+     * @var bool
+     */
+    var $SMTPKeepAlive = false;
 
     /////////////////////////////////////////////////
     // PRIVATE VARIABLES
     /////////////////////////////////////////////////
 
+    /**
+     * Holds the SMTP instance.
+     * @access private
+     * @var SMTP
+     */
+    var $smtp            = NULL;
+    
     /**
      *  Holds all "To" addresses.
      *  @access private
@@ -502,17 +516,96 @@ class PHPMailer
     function SmtpSend($header, $body) {
         // Include SMTP class code, but not twice
         include_once($this->PluginDir . "class.smtp.php");
+        $error = "";
+        $bad_rcpt = array();
 
-        $smtp = new SMTP();
-        $smtp->do_debug = $this->SMTPDebug;
+        if($this->smtp == NULL) { $this->SmtpConnect(); }
+        if($this->smtp->Connected() == false) { $this->SmtpConnect(); }
 
-        // Try to connect to all SMTP servers
+        // Must perform HELO before authentication
+        if ($this->Helo != '')
+            $this->smtp->Hello($this->Helo);
+        else
+            $this->smtp->Hello($this->ServerHostname());
+
+        // If user requests SMTP authentication
+        if($this->SMTPAuth)
+        {
+            if(!$this->smtp->Authenticate($this->Username, $this->Password))
+            {
+                $this->error_handler("SMTP Error: Could not authenticate");
+                return false;
+            }
+        }
+
+        $smtp_from = ($this->Sender == "") ? $this->From : $this->Sender;
+        if(!$this->smtp->Mail(sprintf("<%s>", $smtp_from)))
+        {
+            $error = sprintf("SMTP Error: From address [%s] failed", $smtp_from);
+            $this->error_handler($error);
+            $this->smtp->Reset();
+            return false;
+        }
+
+        // Attempt to send attach all recipients
+        for($i = 0; $i < count($this->to); $i++)
+        {
+            if(!$this->smtp->Recipient(sprintf("<%s>", $this->to[$i][0])))
+                $bad_rcpt[] = $this->to[$i][0];
+        }
+        for($i = 0; $i < count($this->cc); $i++)
+        {
+            if(!$this->smtp->Recipient(sprintf("<%s>", $this->cc[$i][0])))
+                $bad_rcpt[] = $this->cc[$i][0];
+        }
+        for($i = 0; $i < count($this->bcc); $i++)
+        {
+            if(!$this->smtp->Recipient(sprintf("<%s>", $this->bcc[$i][0])))
+                $bad_rcpt[] = $this->bcc[$i][0];
+        }
+
+        // Create error message
+        if(count($bad_rcpt) > 0)
+        {
+            for($i = 0; $i < count($bad_rcpt); $i++)
+            {
+                if($i != 0) { $error .= ", "; }
+                $error .= $bad_rcpt[$i];
+            }
+            $error = "SMTP Error: The following recipients failed [".$error."]";
+            $this->error_handler($error);
+            $this->smtp->Reset();
+            return false;
+        }
+
+        if(!$this->smtp->Data(sprintf("%s%s", $header, $body)))
+        {
+            $this->error_handler("SMTP Error: Data not accepted");
+            $this->smtp->Reset();
+            return false;
+        }
+        if($this->SMTPKeepAlive == true)
+            $this->smtp->Reset();
+        else
+            $this->SmtpClose();
+
+        return true;
+    }
+
+    /**
+     * Initiates a connection to an SMTP server.  Returns false if the 
+     * operation failed.
+     * @access private
+     * @return bool
+     */
+    function SmtpConnect() {
+        if($this->smtp == NULL) { $this->smtp = new SMTP(); }
+        $this->smtp->do_debug = $this->SMTPDebug;
+
         $hosts = explode(";", $this->Host);
         $index = 0;
-        $connection = false;
-        $smtp_from = "";
-        $bad_rcpt = array();
-        $e = "";
+        
+        $connection = ($this->smtp->Connected()) ? true : false; 
 
         // Retry while there is no connection
         while($index < count($hosts) && $connection == false)
@@ -525,7 +618,7 @@ class PHPMailer
                 $port = $this->Port;
             }
 
-            if($smtp->Connect($host, $port, $this->Timeout))
+            if($this->smtp->Connect($host, $port, $this->Timeout))
                 $connection = true;
             $index++;
         }
@@ -534,75 +627,25 @@ class PHPMailer
             $this->error_handler("SMTP Error: could not connect to SMTP host server(s)");
             return false;
         }
-
-        // Must perform HELO before authentication
-        if ($this->Helo != '')
-            $smtp->Hello($this->Helo);
         else
-            $smtp->Hello($this->ServerHostname());
-
-        // If user requests SMTP authentication
-        if($this->SMTPAuth)
-        {
-            if(!$smtp->Authenticate($this->Username, $this->Password))
-            {
-                $this->error_handler("SMTP Error: Could not authenticate");
-                return false;
-            }
-        }
-
-        $smtp_from = ($this->Sender == "") ? $this->From : $this->Sender;
-
-        if(!$smtp->Mail(sprintf("<%s>", $smtp_from)))
-        {
-            $e = sprintf("SMTP Error: From address [%s] failed", $smtp_from);
-            $this->error_handler($e);
-            return false;
-        }
-
-        // Attempt to send attach all recipients
-        for($i = 0; $i < count($this->to); $i++)
-        {
-            if(!$smtp->Recipient(sprintf("<%s>", $this->to[$i][0])))
-                $bad_rcpt[] = $this->to[$i][0];
-        }
-        for($i = 0; $i < count($this->cc); $i++)
-        {
-            if(!$smtp->Recipient(sprintf("<%s>", $this->cc[$i][0])))
-                $bad_rcpt[] = $this->cc[$i][0];
-        }
-        for($i = 0; $i < count($this->bcc); $i++)
-        {
-            if(!$smtp->Recipient(sprintf("<%s>", $this->bcc[$i][0])))
-                $bad_rcpt[] = $this->bcc[$i][0];
-        }
-
-        // Create error message
-        if(count($bad_rcpt) > 0)
-        {
-            for($i = 0; $i < count($bad_rcpt); $i++)
-            {
-                if($i != 0) { $e .= ", "; }
-                $e .= $bad_rcpt[$i];
-            }
-            $e = sprintf("SMTP Error: The following recipients failed [%s]", $e);
-            $this->error_handler($e);
-
-            return false;
-        }
-
-        if(!$smtp->Data(sprintf("%s%s", $header, $body)))
-        {
-            $this->error_handler("SMTP Error: Data not accepted");
-            return false;
-        }
-        $smtp->Quit();
-        $smtp->Close();
-
-        return true;
+            return true;
     }
 
-
+    /**
+     * Closes the active SMTP session if one exists.
+     * @return void
+     */
+    function SmtpClose() {
+        if($this->smtp != NULL)
+        {
+            if($this->smtp->Connected())
+            {
+                $this->smtp->Quit();
+                $this->smtp->Close();
+            }
+        }
+    }
+    
     /////////////////////////////////////////////////
     // MESSAGE CREATION METHODS
     /////////////////////////////////////////////////
