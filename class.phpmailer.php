@@ -972,8 +972,9 @@ class phpmailer
             case "alt_attachments":
                 if($this->EmbeddedImageCount() > 0)
                 {
-                    $header[] = sprintf("Content-Type: %s ;boundary=\"%s\"%stype=text/html", 
-                                    "multipart/related", $this->boundary[1], $this->LE);
+                    $header[] = sprintf("Content-Type: %s;%s\ttype=\"text/html\";%s\tboundary=\"%s\"%s", 
+                                    "multipart/related", $this->LE, $this->LE, 
+                                    $this->boundary[1], $this->LE);
                 }
                 else
                 {
