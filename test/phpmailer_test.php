@@ -142,7 +142,7 @@ class phpmailerTest extends TestCase
         // If attachments then create an attachment list
         if(count($this->Mail->attachment) > 0)
         {
-            $ReportBody .= "Attachments";
+            $ReportBody .= "Attachments:" . $eol;
             $ReportBody .= $bullet_start;
             for($i = 0; $i < count($this->Mail->attachment); $i++)
             {
@@ -305,12 +305,18 @@ class phpmailerTest extends TestCase
     /**
      * Simple plain file attachment test.
      */
-    function test_Plain_FileAttachment() {
+    function test_Multiple_Plain_FileAttachment() {
 
         $this->Mail->Body = "Here is the text body";
-        $this->Mail->Subject .= ": Plain and FileAttachment";
-        
-        if(!$this->Mail->AddAttachment("phpmailer_test.php", "test_attach.txt"))
+        $this->Mail->Subject .= ": Plain + Multiple FileAttachments";
+
+        if(!$this->Mail->AddAttachment("rocks.png"))
+        {
+            $this->assert(false, $this->Mail->ErrorInfo);
+            return;
+        }
+
+        if(!$this->Mail->AddAttachment("phpmailer_test.php", "test.txt"))
         {
             $this->assert(false, $this->Mail->ErrorInfo);
             return;
@@ -332,7 +338,7 @@ class phpmailerTest extends TestCase
     function test_Plain_StringAttachment() {
 
         $this->Mail->Body = "Here is the text body";
-        $this->Mail->Subject .= ": Plain and StringAttachment";
+        $this->Mail->Subject .= ": Plain + StringAttachment";
         
         $sAttachment = "These characters are the content of the " .
                        "string attachment.\nThis might be taken from a ".
@@ -356,7 +362,7 @@ class phpmailerTest extends TestCase
     function test_Quoted_Printable() {
 
         $this->Mail->Body = "Here is the main body";
-        $this->Mail->Subject .= ": Plain and Quoted-printable";
+        $this->Mail->Subject .= ": Plain + Quoted-printable";
         $this->Mail->Encoding = "quoted-printable";
 
         $this->BuildBody();
@@ -398,7 +404,7 @@ class phpmailerTest extends TestCase
     function test_HTML_Attachment() {
 
         $this->Mail->Body = "This is the <b>HTML</b> part of the email.";
-        $this->Mail->Subject .= ": HTML and Attachment";
+        $this->Mail->Subject .= ": HTML + Attachment";
         $this->Mail->IsHTML(true);
         
         if(!$this->Mail->AddAttachment("phpmailer_test.php", "test_attach.txt"))
@@ -432,12 +438,42 @@ class phpmailerTest extends TestCase
             $this->assert(false, $this->Mail->ErrorInfo);
             return;
         }
-        
-        if($this->Mail->EmbeddedImageCount() < 0)
+
+        $this->assert($this->Mail->EmbeddedImageCount() == 1, "Incorrect image count");
+
+        $this->BuildBody();
+        if(!$this->Mail->Send())
         {
-            $this->assert(false, "Embedded image count below 1");
+            $this->assert(false, $this->Mail->ErrorInfo);
             return;
         }
+    
+        $this->assert(true);
+    }
+
+    /**
+     * An embedded attachment test.
+     */
+    function test_Multi_Embedded_Image() {
+
+        $this->Mail->Body = "Embedded Image: <img alt=\"phpmailer\" src=\"cid:my-attach\">" .
+                     "Here is an image!</a>";
+        $this->Mail->Subject .= ": Embedded Image + Attachment";
+        $this->Mail->IsHTML(true);
+        
+        if(!$this->Mail->AddEmbeddedImage("rocks.png", "my-attach", "rocks.png"))
+        {
+            $this->assert(false, $this->Mail->ErrorInfo);
+            return;
+        }
+
+        if(!$this->Mail->AddAttachment("phpmailer_test.php", "test.txt"))
+        {
+            $this->assert(false, $this->Mail->ErrorInfo);
+            return;
+        }
+        
+        $this->assert($this->Mail->EmbeddedImageCount() == 1, "Incorrect image count");
 
         $this->BuildBody();
         if(!$this->Mail->Send())
@@ -455,9 +491,12 @@ class phpmailerTest extends TestCase
     function test_AltBody() {
 
         $this->Mail->Body = "This is the <b>HTML</b> part of the email.";
-        $this->Mail->AltBody = "This is the text part of the email.";
+        $this->Mail->AltBody = "Here is the text body of this message.  " .
+                   "It should be quite a few lines.  It should be wrapped at the " .
+                   "40 characters.  Make sure that it is.";
+        $this->Mail->WordWrap = 40;
         $this->AddNote("This is a mulipart alternative email");
-        $this->Mail->Subject .= ": AltBody";
+        $this->Mail->Subject .= ": AltBody + Word Wrap";
 
         $this->BuildBody();
         if(!$this->Mail->Send())
@@ -476,7 +515,7 @@ class phpmailerTest extends TestCase
 
         $this->Mail->Body = "This is the <b>HTML</b> part of the email.";
         $this->Mail->AltBody = "This is the text part of the email.";
-        $this->Mail->Subject .= ": AltBody and Attachment";
+        $this->Mail->Subject .= ": AltBody + Attachment";
         $this->Mail->IsHTML(true);
         
         if(!$this->Mail->AddAttachment("phpmailer_test.php", "test_attach.txt"))
