@@ -1,10 +1,13 @@
 ChangeLog
 
-Version 1.09 (Fri, June 08 2001)
+Version 1.10 (Tue, Jun 12 2001)
+* Fixed win32 mail header bug (printed out headers in message body)
+
+Version 1.09 (Fri, Jun 08 2001)
 * Changed date header to work with Netscape mail programs
 * Altered phpdoc documentation
 
-Version 1.08 (Tue, June 05 2001)
+Version 1.08 (Tue, Jun 05 2001)
 * Added enhanced error-checking
 * Added phpdoc documentation to source
 

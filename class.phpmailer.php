@@ -522,24 +522,24 @@ class phpmailer
 	 */
 	function create_header() {
 		$header = array();
-		$header[] = sprintf("Date: %s\n", date("D, j M Y H:i:s T"));
+		$header[] = sprintf("Date: %s\r\n", date("D, j M Y H:i:s T"));
 		$header[] = $this->addr_append("To", $this->to);
-		$header[] = sprintf("From: %s <%s>\n", $this->FromName, trim($this->From));
+		$header[] = sprintf("From: %s <%s>\r\n", $this->FromName, trim($this->From));
 		if(count($this->cc) > 0)
-			$header[] = $this->addr_append("cc", $this->cc);
+			$header[] = $this->addr_append("Cc", $this->cc);
 		if(count($this->bcc) > 0)
-			$header[] = $this->addr_append("bcc", $this->bcc);
+			$header[] = $this->addr_append("Bcc", $this->bcc);
 		if(count($this->ReplyTo) > 0)
 			$header[] = $this->addr_append("Reply-to", $this->ReplyTo);
-		$header[] = sprintf("Subject: %s\n", trim($this->Subject));
-		$header[] = sprintf("X-Priority: %d\n", $this->Priority);
-		$header[] = sprintf("X-Mailer: %s\n", $this->Version);
-		$header[] = sprintf("Content-Transfer-Encoding: %s\n", $this->Encoding);
-		$header[] = sprintf("Return-Path: %s\n", trim($this->From));
+		$header[] = sprintf("Subject: %s\r\n", trim($this->Subject));
+		$header[] = sprintf("X-Priority: %d\r\n", $this->Priority);
+		$header[] = sprintf("X-Mailer: %s\r\n", $this->Version);
+		$header[] = sprintf("Content-Transfer-Encoding: %s\r\n", $this->Encoding);
+		$header[] = sprintf("Return-Path: %s\r\n", trim($this->From));
 		
 		// Add custom headers
 		for($index = 0; $index < count($this->CustomHeader); $index++)
-		   $header[] = sprintf("%s\n", $this->CustomHeader[$index]);
+		   $header[] = sprintf("%s\r\n", $this->CustomHeader[$index]);
 		
 		if($this->UseMSMailHeaders)
 		   $header[] = $this->AddMSMailHeaders();
@@ -547,13 +547,13 @@ class phpmailer
 		// Add all attachments
 		if(count($this->attachment) > 0)
 		{
-			$header[] = sprintf("Content-Type: Multipart/Mixed; charset = \"%s\";\n", $this->CharSet);
-			$header[] = sprintf(" boundary=\"Boundary-=%s\"\n", $this->boundary);
+			$header[] = sprintf("Content-Type: Multipart/Mixed; charset = \"%s\";\r\n", $this->CharSet);
+			$header[] = sprintf(" boundary=\"Boundary-=%s\"\r\n", $this->boundary);
 		}
 		else
-			$header[] = sprintf("Content-Type: %s; charset = \"%s\";\n", $this->ContentType, $this->CharSet);
+			$header[] = sprintf("Content-Type: %s; charset = \"%s\";\r\n", $this->ContentType, $this->CharSet);
 		
-		$header[] = "MIME-Version: 1.0\n\n";
+		$header[] = "MIME-Version: 1.0\r\n";
 		
 		return(join("", $header));
 	}
