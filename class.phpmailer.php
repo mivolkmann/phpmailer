@@ -183,7 +183,7 @@ class phpmailer
      *  Sets the SMTP hosts.  All hosts must be separated by a
      *  semicolon.  You can also specify a different port
      *  for each host by using this format: [hostname:port]
-     *  (e.g. "smtp1.domain.com:25;smtp2.domain.com").
+     *  (e.g. "smtp1.example.com:25;smtp2.example.com").
      *  Hosts will be tried in order.
      *  @access public
      *  @var string

@@ -46,16 +46,16 @@ require("class.phpmailer.php");
 $mail = new phpmailer();
 
 $mail->IsSMTP();                                      // set mailer to use SMTP
-$mail->Host = "smtp1.site.com;smtp2.site.com";        // specify main and backup server
+$mail->Host = "smtp1.example.com;smtp2.example.com";  // specify main and backup server
 $mail->SMTPAuth = true     // turn on SMTP authentication
 $mail->Username = "jswan"  // SMTP username
 $mail->Password = "secret" // SMTP password
 
-$mail->From = "from@email.com";
+$mail->From = "from@example.com";
 $mail->FromName = "Mailer";
-$mail->AddAddress("josh@site.com", "Josh Adams");
-$mail->AddAddress("ellen@site.com");                  // name is optional
-$mail->AddReplyTo("info@site.com", "Information");
+$mail->AddAddress("josh@example.net", "Josh Adams");
+$mail->AddAddress("ellen@example.com");                  // name is optional
+$mail->AddReplyTo("info@example.com", "Information");
 
 $mail->WordWrap = 50;                                 // set word wrap to 50 characters
 $mail->AddAttachment("/var/tmp/file.tar.gz");         // add attachments
