@@ -58,7 +58,7 @@ class phpmailerTest extends TestCase
         global $global_vars;
         global $INCLUDE_DIR;
 
-        $this->Mail = new PhpMailer();
+        $this->Mail = new PHPMailer();
 
         $this->Mail->Priority = 3;
         $this->Mail->Encoding = "8bit";
@@ -98,7 +98,7 @@ class phpmailerTest extends TestCase
      */
     function tearDown() {
         // Clean global variables
-        $this->Mail = false;
+        $this->Mail = NULL;
         $this->ChangeLog = array();
         $this->NoteLog = array();
     }
@@ -484,6 +484,17 @@ class phpmailerTest extends TestCase
         $this->Mail->Subject = $subject . ": SMTP keep-alive 2";
         $this->assert($this->Mail->Send(), $this->Mail->ErrorInfo);
         $this->Mail->SmtpClose();
+    }
+    
+    function test_Error() {
+        $this->BuildBody();
+        $this->Mail->Subject .= ": This should not be sent";
+        $this->Mail->ClearAddresses(); // no addresses should cause an error
+        $this->assert($this->Mail->IsError() == false, "Error found");
+        $this->assert($this->Mail->Send() == false, "Send succeeded");
+        $this->assert($this->Mail->IsError(), "No error found");
+        $this->assertEquals('You must provide at least one ' .
+                            'recipient email address.', $this->Mail->ErrorInfo);
     }
 }  
  
