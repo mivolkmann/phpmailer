@@ -1,5 +1,8 @@
 ChangeLog
 
+Version 1.40 (Sun, Aug 12 2001)
+* Added multipart/alternative support (AltBody)
+
 Version 1.29 (Fri, Aug 03 2001)
 * Added AddStringAttachment() method
 * Added SMTP authentication support

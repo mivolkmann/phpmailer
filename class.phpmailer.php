@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.25, Created 07/02/2001
+// Version 1.40, Created 08/12/2001
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -96,6 +96,16 @@ class phpmailer
    var $Body             = "";
 
    /**
+    * Sets a multipart/alternative message.  This is an 
+    * alternative, text (non-HTML) body.  Useful for mail 
+    * clients that do not have HTML email 
+    * capability.  Default value is "".
+    * @public
+    * @type string
+    */
+   var $AltBody          = "";
+
+   /**
     * Sets word wrapping on the message. Default value is false (off).
     * @public
     * @type string
@@ -130,7 +140,7 @@ class phpmailer
     *  @public
     *  @type string
     */
-   var $Version       = "phpmailer [version 1.25]";
+   var $Version          = "phpmailer [version 1.40]";
 
 
    /////////////////////////////////////////////////
@@ -239,6 +249,13 @@ class phpmailer
     *  @type string
     */
    var $boundary      = false;
+
+   /**
+    *  Holds the message boundary. This is used specifically 
+    *  when multipart/alternative messages are sent. Default is false.
+    *  @type string
+    */
+   var $subboundary      = false;
 
    /////////////////////////////////////////////////
    // VARIABLE METHODS
@@ -369,6 +386,10 @@ class phpmailer
          $this->error_handler("You must provide at least one recipient email address");
          return false;
       }
+
+      // Set whether the message is multipart/alternative
+      if(!empty($this->AltBody))
+         $this->ContentType = "multipart/alternative";
 
       $header = $this->create_header();
       if(!$body = $this->create_body())
@@ -690,10 +711,12 @@ class phpmailer
       $header[] = "MIME-Version: 1.0\r\n";
 
       // Add all attachments
-      if(count($this->attachment) > 0)
+      if(count($this->attachment) > 0 || !empty($this->AltBody))
       {
          // Set message boundary
          $this->boundary = "_b" . md5(uniqid(time()));
+         // Set message subboundary for multipart/alternative
+         $this->subboundary = "_sb" . md5(uniqid(time()));
 
          $header[] = "Content-Type: Multipart/Mixed;\r\n";
          $header[] = sprintf(" boundary=\"Boundary-=%s\"\r\n\r\n", $this->boundary);
@@ -718,7 +741,42 @@ class phpmailer
       if($this->WordWrap)
          $this->Body = $this->wordwrap($this->Body, $this->WordWrap);
 
-      $this->Body = $this->encode_string($this->Body, $this->Encoding);
+      // If content type is multipart/alternative set body like this:
+      if ((!empty($this->AltBody)) && (count($this->attachment) < 1))
+      {
+         // Return text of body
+         $mime = array();
+         $mime[] = "This is a MIME message. If you are reading this text, you\r\n";
+         $mime[] = "might want to consider changing to a mail reader that\r\n";
+         $mime[] = "understands how to properly display MIME multipart messages.\r\n\r\n";
+         $mime[] = sprintf("--Boundary-=%s\r\n", $this->boundary);
+      
+         // Insert body. If multipart/alternative, insert both html and plain
+         $mime[] = sprintf("Content-Type: %s; charset = \"%s\"; boundary = \"Boundary-=%s\";\r\n", 
+                           $this->ContentType, $this->CharSet, $this->subboundary);
+         $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
+      
+         $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
+         $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
+         $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
+         $mime[] = sprintf("%s\r\n\r\n", $this->Body_mp_html);
+        
+         $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
+         $mime[] = sprintf("Content-Type: text/plain; charset = \"%s\";\r\n", $this->CharSet);
+         $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
+         $mime[] = sprintf("%s\r\n\r\n", $this->Body_mp_plain);
+        
+         $mime[] = sprintf("\r\n--Boundary-=%s--\r\n\r\n", $this->subboundary);
+                   
+         $mime[] = sprintf("\r\n--Boundary-=%s--\r\n", $this->boundary);
+        
+         $this->Body = $this->encode_string(join("", $mime), $this->Encoding);
+      }
+      else
+      {
+         $this->Body = $this->encode_string($this->Body, $this->Encoding);
+      }
+
 
       if(count($this->attachment) > 0)
       {
@@ -779,9 +837,32 @@ class phpmailer
       $mime[] = "might want to consider changing to a mail reader that\r\n";
       $mime[] = "understands how to properly display MIME multipart messages.\r\n\r\n";
       $mime[] = sprintf("--Boundary-=%s\r\n", $this->boundary);
-      $mime[] = sprintf("Content-Type: %s; charset = \"%s\";\r\n", $this->ContentType, $this->CharSet);
-      $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-      $mime[] = sprintf("%s\r\n", $this->Body);
+      
+      // Insert body. If multipart/alternative, insert both html and plain.
+      if (!empty($this->AltBody))
+      {
+          $mime[] = sprintf("Content-Type: %s; charset = \"%s\"; boundary = \"Boundary-=%s\";\r\n", 
+                            $this->ContentType, $this->CharSet, $this->subboundary);
+          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
+            
+          $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
+          $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
+          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
+          $mime[] = sprintf("%s\r\n\r\n", $this->Body);
+            
+          $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
+          $mime[] = sprintf("Content-Type: text/plain; charset = \"%s\";\r\n", $this->CharSet);
+          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
+          $mime[] = sprintf("%s\r\n\r\n", $this->AltBody);
+            
+          $mime[] = sprintf("\r\n--Boundary-=%s--\r\n\r\n", $this->subboundary);
+      }
+      else
+      {
+          $mime[] = sprintf("Content-Type: %s; charset = \"%s\";\r\n", $this->ContentType, $this->CharSet);
+          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
+          $mime[] = sprintf("%s\r\n", $this->Body);
+      }      
 
       // Add all attachments
       for($i = 0; $i < count($this->attachment); $i++)
@@ -906,7 +987,7 @@ class phpmailer
    * @returns bool
    */
    function AddStringAttachment($string, $filename, $encoding = "binary", $type = "application/octet-stream") {
-      if(emtpy($filename))
+      if(empty($filename))
       {
           $this->error_handler("Please provide a file name for attachment");
           return false;
