@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.60, Created 03/30/2002
+// Version 1.65, Created 08/09/2002
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -149,7 +149,7 @@ class phpmailer
      *  @access public
      *  @var string
      */
-    var $Version           = "1.54";
+    var $Version           = "1.65";
 
     /**
      * Sets the email address that a reading confirmation will be sent.
@@ -752,6 +752,7 @@ class phpmailer
             return false;
         }
         $smtp->Quit();
+        $smtp->Close();
 
         return true;
     }
