@@ -82,7 +82,10 @@ class phpmailerTest extends TestCase
         if(strlen($this->Mail->Host) > 0)
             $this->Mail->Mailer = "smtp";
         else
+        {
             $this->Mail->Mailer = "mail";
+            $this->Sender = "unit_test@phpmailer.sf.net";
+        }
         
         global $global_vars;
         $this->SetAddress($global_vars["mail_to"]);
