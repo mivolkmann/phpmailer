@@ -938,7 +938,7 @@ class phpmailer
         // To be created automatically by mail()
         if($this->Mailer != "mail")
         {
-            if(count($this->to) > 0))
+            if(count($this->to) > 0)
                 $header[] = $this->addr_append("To", $this->to);
             else if (count($this->cc) == 0)
                 $header[] = "To: undisclosed-recipients:;".$this->LE;
