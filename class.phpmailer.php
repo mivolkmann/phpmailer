@@ -472,6 +472,12 @@ class phpmailer
         // If invalid or empty just set to the current time
         if(empty($sendTime) || !is_int($sendTime))
             $sendTime = time();
+        
+        if(!is_dir($queuePath))
+        {
+            $this->error_handler("The supplied queue directory does not exist");
+            return false;
+        }
 
         if((count($this->to) + count($this->cc) + count($this->bcc)) < 1)
         {
@@ -519,6 +525,7 @@ class phpmailer
             $message[] = sprintf("Host: %s\r\n", $this->Host);
             $message[] = sprintf("Port: %d\r\n", $this->Port);
             $message[] = sprintf("Helo: %s\r\n", $this->Helo);
+            $message[] = sprintf("Timeout: %d\r\n", $this->Timeout);
             
             if($this->SMTPAuth)
                 $auth_no = 1;
