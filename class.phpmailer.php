@@ -372,7 +372,7 @@ class phpmailer
      * functions correctly. Returns void.
      * @public
      * @returns void
-     */
+    */
     function AddCC($address, $name = "") {
         $cur = count($this->cc);
         $this->cc[$cur][0] = trim($address);
@@ -510,7 +510,7 @@ class phpmailer
         mt_srand(time());
         $msg_id = md5(uniqid(mt_rand()));
         
-        $fp = fopen($queue_path . $msg_id . ".pqm", "wb");
+        $fp = @fopen($queue_path . $msg_id . ".pqm", "wb");
         if(!$fp)
         {
             $this->error_handler(sprintf("Could not write to %s directory", $queue_path));
@@ -563,7 +563,12 @@ class phpmailer
         $message[] = $header;
         $message[] = $body;
        
-        fwrite($fp, join("", $message));
+        if(fwrite($fp, join("", $message)) == -1)
+        {
+            $this->error_handler("Write to file failed");
+            return false;
+        }
+        fclose($fp);
 
         return ($msg_id . ".pqm");
     }
@@ -895,6 +900,27 @@ class phpmailer
 
         return ($message);
     }
+    
+    /**
+     * Set the body wrapping.
+     * @private
+     * @returns void
+     */
+    function SetWordWrap() {
+        if($this->WordWrap < 1)
+            return;
+            
+        switch($this->message_type)
+        {
+           case "alt":
+           case "alt_attachment":
+              $this->AltBody = $this->word_wrap($this->AltBody, $this->WordWrap);
+              break;
+           default:
+              $this->Body = $this->word_wrap($this->Body, $this->WordWrap);
+              break;
+        }
+    }
 
     /**
      * Assembles message header.  Returns a string if successful
@@ -1006,9 +1032,7 @@ class phpmailer
     function create_body() {
         $body = array();
 
-        // wordwrap the message body if set
-        if($this->WordWrap > 0)
-            $this->Body = $this->word_wrap($this->Body, $this->WordWrap);
+        $this->SetWordWrap();
 
         switch($this->message_type)
         {
@@ -1139,8 +1163,8 @@ class phpmailer
         for($i = 0; $i < count($this->attachment); $i++)
         {
             // Check for string attachment
-            $isString = $this->attachment[$i][5];
-            if ($isString)
+            $bString = $this->attachment[$i][5];
+            if ($bString)
             {
                 $string = $this->attachment[$i][0];
             }
@@ -1168,22 +1192,21 @@ class phpmailer
                               $disposition, $name, $this->LE.$this->LE);
 
             // Encode as string attachment
-            if($isString)
+            if($bString)
             {
-                if(!$mime[] = sprintf("%s%s", $this->encode_string($string, $encoding), 
-                                       $this->LE.$this->LE))
-                  return false;
+                if(!$mime[] = $this->encode_string($string, $encoding))                
+                    return false;
+                $mime[] = $this->LE.$this->LE;
             }
             else
             {
-                if(!$mime[] = sprintf("%s%s", $this->encode_file($path, $encoding), 
-                                      $this->LE.$this->LE))
-                  return false;
-
-            $mime[] = sprintf("--%s--%s", $this->boundary[1], $this->LE);
-
+                if(!$mime[] = $this->encode_file($path, $encoding))                
+                    return false;
+                $mime[] = $this->LE.$this->LE;
             }
         }
+
+        $mime[] = sprintf("--%s--%s", $this->boundary[1], $this->LE);
 
         return(join("", $mime));
     }
@@ -1200,11 +1223,11 @@ class phpmailer
             $this->error_handler(sprintf("File Error: Could not open file %s", $path));
             return false;
         }
-        $file = fread($fd, filesize($path));
-        $encoded = $this->encode_string($file, $encoding);
+        $file_buffer = fread($fd, filesize($path));
+        $file_buffer = $this->encode_string($file_buffer, $encoding);
         fclose($fd);
 
-        return($encoded);
+        return $file_buffer;
     }
 
     /**
