@@ -564,7 +564,7 @@ class SMTP
             return false;
         }
 
-        fputs($this->smtp_conn,"MAIL FROM:" . $from . $this->CRLF);
+        fputs($this->smtp_conn,"MAIL FROM:<" . $from . ">" . $this->CRLF);
 
         $rply = $this->get_lines();
         $code = substr($rply,0,3);
@@ -703,7 +703,7 @@ class SMTP
             return false;
         }
 
-        fputs($this->smtp_conn,"RCPT TO:" . $to . $this->CRLF);
+        fputs($this->smtp_conn,"RCPT TO:<" . $to . ">" . $this->CRLF);
 
         $rply = $this->get_lines();
         $code = substr($rply,0,3);
