@@ -101,7 +101,7 @@ class SMTP
         # so we will give it a longer timeout for the first read
         // Windows still does not have support for this timeout function
         if(substr(PHP_OS, 0, 3) != "WIN")
-           socket_set_timeout($this->smtp_conn, 1, 0);
+           socket_set_timeout($this->smtp_conn, $tval, 0);
 
         # get any announcement stuff
         $announce = $this->get_lines();
@@ -446,7 +446,23 @@ class SMTP
             $host = "localhost";
         }
 
-        fputs($this->smtp_conn,"HELO " . $host . $this->CRLF);
+        // Send extended hello first (RFC 2821)
+        if(!$this->SendHello("EHLO", $host))
+        {
+            if(!$this->SendHello("HELO", $host))
+                return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Sends a HELO/EHLO command.
+     * @access private
+     * @return bool
+     */
+    function SendHello($hello, $host) {
+        fputs($this->smtp_conn, $hello . " " . $host . $this->CRLF);
 
         $rply = $this->get_lines();
         $code = substr($rply,0,3);
@@ -457,7 +473,7 @@ class SMTP
 
         if($code != 250) {
             $this->error =
-                array("error" => "HELO not accepted from server",
+                array("error" => $hello . " not accepted from server",
                       "smtp_code" => $code,
                       "smtp_msg" => substr($rply,4));
             if($this->do_debug >= 1) {
@@ -468,7 +484,7 @@ class SMTP
         }
 
         $this->helo_rply = $rply;
-
+        
         return true;
     }
 
