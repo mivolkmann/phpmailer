@@ -103,7 +103,7 @@
             # so we will give it a longer timeout for the first read
             // Commented b/c of win32 warning messages
             //if(function_exists("socket_set_timeout"))
-            //   socket_set_timeout($this->smtp_conn, 1, 0);
+               socket_set_timeout($this->smtp_conn, 1, 0);
 
             # get any announcement stuff
             $announce = $this->get_lines();

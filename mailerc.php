@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // mailerc - phpmailer client
 //
-// Version 0.01, Created 12/15/2001
+// Version 0.07, Created 2001-01-03
 //
 // Client application for sending outgoing 
 // messages from a file. 
@@ -104,6 +104,7 @@ class mailerc extends phpmailer
             $this->Host     = $this->qvar($qarray, "Host");
             $this->Port     = $this->qvar($qarray, "Port");
             $this->Helo     = $this->qvar($qarray, "Helo");
+            $this->Timeout  = $this->qvar($qarray, "Timeout");
             $this->SMTPAuth = (int)$this->qvar($qarray, "SMTPAuth");
             $this->Username = $this->qvar($qarray, "Username");
             $this->Password = $this->qvar($qarray, "Password");
