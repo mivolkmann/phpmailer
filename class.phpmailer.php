@@ -624,11 +624,11 @@ class phpmailer
         {
             // The fifth parameter to mail is only available in PHP >= 4.0.5
             $params = sprintf("-oi -f %s", $this->Sender);
-            $rt = @mail($to, $this->Subject, $body, $header, $params);
+            $rt = @mail($to, $this->encode_header($this->Subject), $body, $header, $params);
         }
         else
         {
-            $rt = @mail($to, $this->Subject, $body, $header);
+            $rt = @mail($to, $this->encode_header($this->Subject), $body, $header);
         }
 
         if (isset($old_from))
@@ -810,7 +810,7 @@ class phpmailer
         if(empty($addr[1]))
             $formatted = $addr[0];
         else
-            $formatted = sprintf('"%s" <%s>', addslashes($addr[1]), $addr[0]);
+            $formatted = sprintf('%s <%s>', $this->encode_header($addr[1], 'phrase'), $addr[0]);
 
         return $formatted;
     }
@@ -946,7 +946,7 @@ class phpmailer
 
         $from = array();
         $from[0][0] = trim($this->From);
-        $from[0][1] = addslashes($this->FromName);
+        $from[0][1] = $this->FromName;
         $header[] = $this->addr_append("From", $from); 
 
         if(count($this->cc) > 0)
@@ -961,7 +961,7 @@ class phpmailer
 
         // mail() sets the subject itself
         if($this->Mailer != "mail")
-            $header[] = sprintf("Subject: %s%s", trim($this->Subject), $this->LE);
+            $header[] = sprintf("Subject: %s%s", $this->encode_header(trim($this->Subject)), $this->LE);
 
         $header[] = sprintf("X-Priority: %d%s", $this->Priority, $this->LE);
         $header[] = sprintf("X-Mailer: phpmailer [version %s]%s", $this->Version, $this->LE);
@@ -973,7 +973,7 @@ class phpmailer
 
         // Add custom headers
         for($index = 0; $index < count($this->CustomHeader); $index++)
-            $header[] = sprintf("%s%s", $this->CustomHeader[$index], $this->LE);
+            $header[] = sprintf("%s: %s%s", trim($this->CustomHeader[$index][0]), $this->encode_header(trim($this->CustomHeader[$index][1])), $this->LE);
 
         if($this->UseMSMailHeaders)
             $header[] = $this->AddMSMailHeaders();
@@ -1274,6 +1274,60 @@ class phpmailer
     }
 
     /**
+     * Encode a header string to best of Q, B, quoted or none.  Returns a string.
+     * @access private
+     * @return string
+     */
+    function encode_header ($str, $position = 'text') {
+      $x = 0;
+      
+      switch (strtolower($position)) {
+        case 'phrase':
+          if (preg_match_all('/[\200-\377]/', $str, $matches) == 0) {
+            // Can't use addslashes as we don't know what value has magic_quotes_sybase.
+            $encoded = addcslashes($str, '\000-\037\177');
+            $encoded = preg_replace('/([\"])/', '\\"', $encoded);
+
+            if (($str == $encoded) && (preg_match_all('/[^A-Za-z0-9!#$%&\'*+\/=?^_`{|}~ -]/', $str, $matches) == 0))
+              return ($encoded);
+            else
+              return ("\"$encoded\"");
+          }
+          $x = preg_match_all('/[^\040\041\043-\133\135-\176]/', $str, $matches);
+          break;
+        case 'comment':
+          $x = preg_match_all('/[()"]/', $str, $matches);
+          // Fall-through
+        case 'text':
+        default:
+          $x += preg_match_all('/[\000-\010\013\014\016-\037\177-\377]/', $str, $matches);
+          break;
+      }
+
+      if ($x == 0)
+        return ($str);
+
+      $maxlen = 75 - 7 - strlen($this->CharSet);
+      // Try to select the encoding which should produce the shortest output
+      if (strlen($str)/3 < $x) {
+        $encoding = 'B';
+        $encoded = base64_encode($str);
+        $maxlen -= $maxlen % 4;
+        $encoded = trim(chunk_split($encoded, $maxlen, "\n"));
+      } else {
+        $encoding = 'Q';
+        $encoded = $this->encode_q($str, $position);
+        $encoded = $this->word_wrap($encoded, $maxlen, true);
+        $encoded = str_replace("=".$this->LE, "\n", trim($encoded));
+      }
+
+      $encoded = preg_replace('/^(.*)$/m', " =?".$this->CharSet."?$encoding?\\1?=", $encoded);
+      $encoded = trim(str_replace("\n", $this->LE, $encoded));
+      
+      return($encoded);
+    }
+    
+    /**
      * Encode string to quoted-printable.  Returns a string.
      * @access private
      * @return string
@@ -1292,6 +1346,36 @@ class phpmailer
 
         // Maximum line length of 76 characters before CRLF (74 + space + '=')
         $encoded = $this->word_wrap($encoded, 74, true);
+
+        return $encoded;
+    }
+
+    /**
+     * Encode string to q encoding.  Returns a string.
+     * @access private
+     * @return string
+     */
+    function encode_q ($str, $position = 'text') {
+        // There should not be any EOL in the string
+        $encoded = preg_replace("[\r\n]", "", $str);
+
+        switch (strtolower($position)) {
+          case 'phrase':
+            $encoded = preg_replace("/([^A-Za-z0-9!*+\/ -])/e", "'='.sprintf('%02X', ord('\\1'))", $encoded);
+            break;
+          case 'comment':
+            $encoded = preg_replace("/([\(\)\"])/e", "'='.sprintf('%02X', ord('\\1'))", $encoded);
+            // Fall-through
+          case 'text':
+          default:
+            // Replace every high ascii, control =, ? and _ characters
+            $encoded = preg_replace('/([\000-\011\013\014\016-\037\075\077\137\177-\377])/e',
+                  "'='.sprintf('%02X', ord('\\1'))", $encoded);
+            break;
+        }
+        
+        // Replace every spaces to _ (more readable than =20)
+        $encoded = str_replace(" ", "_", $encoded);
 
         return $encoded;
     }
@@ -1528,7 +1612,8 @@ class phpmailer
      * @return void
      */
     function AddCustomHeader($custom_header) {
-        $this->CustomHeader[] = $custom_header;
+        // Append to $custom_header array
+        $this->CustomHeader[] = explode(":", $custom_header, 2);
     }
 
     /**
