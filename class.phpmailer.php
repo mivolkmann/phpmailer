@@ -67,8 +67,8 @@ class PHPMailer
     var $FromName           = "Root User";
 
     /**
-     * Sets the Sender email of the message. If not empty, will be sent via -f to sendmail
-     * or as 'MAIL FROM' in smtp mode.
+     * Sets the Sender email (Return-Path) of the message.  If not empty,
+     * will be sent via -f to sendmail or as 'MAIL FROM' in smtp mode.
      * @var string
      */
     var $Sender            = "";
@@ -422,19 +422,17 @@ class PHPMailer
      * @return bool
      */
     function MailSend($header, $body) {
-        // Cannot add Bcc's to the $to
-        $to = $this->to[0][0]; // no extra comma
-        for($i = 1; $i < count($this->to); $i++)
-            $to .= sprintf(",%s", $this->to[$i][0]);
+        $to = "";
+        for($i = 0; $i < count($this->to); $i++)
+        {
+            if($i != 0) { $to .= ", "; }
+            $to .= $this->to[$i][0];
+        }
 
-        if ($this->Sender != "" && PHP_VERSION >= "4.0")
+        if ($this->Sender != "" && strlen(ini_get("safe_mode"))< 1)
         {
             $old_from = ini_get("sendmail_from");
             ini_set("sendmail_from", $this->Sender);
-        }
-
-        if ($this->Sender != "" && PHP_VERSION >= "4.0.5")
-        {
             $params = sprintf("-oi -f %s", $this->Sender);
             $rt = @mail($to, $this->EncodeHeader($this->Subject), $body, 
                         $header, $params);
@@ -628,7 +626,7 @@ class PHPMailer
         if(count($addr) > 1)
         {
             for($i = 1; $i < count($addr); $i++)
-                $addr_str .= sprintf(", %s", $this->AddrFormat($addr[$i]));
+                $addr_str .= ", " . $this->AddrFormat($addr[$i]);
             $addr_str .= $this->LE;
         }
         else
@@ -646,7 +644,10 @@ class PHPMailer
         if(empty($addr[1]))
             $formatted = $addr[0];
         else
-            $formatted = sprintf('%s <%s>', $this->EncodeHeader($addr[1], 'phrase'), $addr[0]);
+        {
+            $formatted = $this->EncodeHeader($addr[1], 'phrase') . " <" . 
+                         $addr[0] . ">";
+        }
 
         return $formatted;
     }
@@ -780,15 +781,14 @@ class PHPMailer
                 $result .= $this->AddrAppend("To", $this->to);
             else if (count($this->cc) == 0)
                 $result .= $this->HeaderLine("To", "undisclosed-recipients:;");
+            if(count($this->cc) > 0)
+                $result .= $this->AddrAppend("Cc", $this->cc);
         }
 
         $from = array();
         $from[0][0] = trim($this->From);
         $from[0][1] = $this->FromName;
         $result .= $this->AddrAppend("From", $from); 
-
-        if(count($this->cc) > 0)
-            $result .= $this->AddrAppend("Cc", $this->cc);
 
         // sendmail and mail() extract Bcc from the header before sending
         if((($this->Mailer == "sendmail") || ($this->Mailer == "mail")) && (count($this->bcc) > 0))
