@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.20, Created 06/25/2001
+// Version 1.25, Created 07/02/2001
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -51,6 +51,13 @@ class phpmailer
     * @type string
     */
    var $Encoding         = "8bit";
+
+   /**
+    * Holds the most recent mailer error message. Default value is "".
+    * @public
+    * @type string
+    */
+   var $ErrorInfo        = "";
 
    /**
     * Sets the From email of the message. Default value is "root@localhost".
@@ -112,13 +119,6 @@ class phpmailer
    var $Sendmail         = "/usr/sbin/sendmail";
 
    /**
-    *  Turns phpmailer debugging on or off. Default value is false (off).
-    *  @public
-    *  @type bool
-    */
-   var $MailerDebug      = true;
-
-   /**
     *  Turns Microsoft mail client headers on and off. Default value is false (off).
     *  @public
     *  @type bool
@@ -130,7 +130,7 @@ class phpmailer
     *  @public
     *  @type string
     */
-   var $Version       = "phpmailer [version 1.20]";
+   var $Version       = "phpmailer [version 1.25]";
 
 
    /////////////////////////////////////////////////
@@ -290,7 +290,7 @@ class phpmailer
    }
 
    /**
-    * Adds a "cc" address.  Returns void.
+    * Adds a "Cc" address. Returns void.
     * @public
     * @returns void
     */
@@ -301,7 +301,12 @@ class phpmailer
    }
 
    /**
-    * Adds a "bcc" address.  Returns void.
+    * Adds a "Bcc" address. Note: this function works 
+    * with the SMTP mailer on win32, not with the "mail" 
+    * mailer.  This is a PHP bug that has been submitted 
+    * on the Zend web site. The UNIX version of PHP 
+    * functions correctly. 
+    * Returns void.
     * @public
     * @returns void
     */
@@ -328,7 +333,8 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * Creates message and assigns Mailer.  Returns bool.
+    * Creates message and assigns Mailer. If the message is 
+    * not sent successfully then it returns false.  Returns bool.
     * @public
     * @returns bool
     */
@@ -405,7 +411,13 @@ class phpmailer
       for($i = 1; $i < count($this->to); $i++)
          $to .= sprintf(",%s", $this->to[$i][0]);
 
-      if ($this->Sender != "")
+      if ($this->Sender != "" && PHP_VERSION >= "4.0")
+      {
+         $old_from = ini_get("sendmail_from");
+         ini_set("sendmail_from", $this->Sender);
+      }
+
+      if ($this->Sender != "" && PHP_VERSION >= "4.0.5")
       {
          // The fifth parameter to mail is only available in PHP >= 4.0.5
          $params = sprintf("-f %s", $this->Sender);
@@ -413,9 +425,11 @@ class phpmailer
       }
       else
       {
-         //echo $this->to[0][0];
          $rt = @mail($to, $this->Subject, $body, $header);
       }
+
+      if (isset($old_from))
+         ini_set("sendmail_from", $old_from);
 
       if(!$rt)
       {
@@ -601,7 +615,7 @@ class phpmailer
     */
    function create_header() {
       $header = array();
-      $header[] = sprintf("Date: %s\r\n", date("r")); //D, j M Y H:i:s T"));
+      $header[] = sprintf("Date: %s\r\n", $this->rfc_date());
 
       // To be created automatically by mail()
       if($this->Mailer != "mail")
@@ -683,7 +697,8 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * Checks if attachment is valid and add to list.
+    * Checks if attachment is valid and then adds 
+    * the attachment to the list. 
     * Returns false if the file was not found.
     * @public
     * @returns bool
@@ -899,17 +914,27 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * Prints out structured errors.  Returns void.
+    * Adds the error message to the error container.
+    * Returns void.
     * @private
     * @returns void
     */
    function error_handler($msg) {
-      if($this->MailerDebug == true)
-      {
-         print("<h3>Mailer Error</h3>");
-         print("Description:<br>");
-         printf("<font color=\"FF0000\">%s</font><br>", $msg);
-      }
+        $this->ErrorInfo = $msg;
+   }
+   
+   /**
+    * Returns the proper RFC 822 formatted date. Returns string.
+    * @private
+    * @returns string
+    */
+   function rfc_date() {
+        $tz = date("Z");
+        $tzs = ($tz < 0) ? "-" : "+";
+        $tz = abs($tz);
+        $tz = $tz/36 + $tz % 3600;
+        $date = sprintf("%s %s%04d", date("D, j M Y H:i:s"), $tzs, $tz);
+        return $date;
    }
 
    /**
