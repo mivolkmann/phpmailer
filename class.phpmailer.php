@@ -867,11 +867,17 @@ class phpmailer
    /**
    * Adds the string attachment to the list. This method can be used 
    * to attach ascii data.  It can also attach binary data, such as 
-   * a BLOB record from a database. Always returns true.
+   * a BLOB record from a database. Returns false if missing filename.
    * @public
    * @returns bool
    */
-   function AddStringAttachment($string, $filename, $encoding = "base64", $type = "application/octet-stream") {
+   function AddStringAttachment($string, $filename, $encoding = "binary", $type = "application/octet-stream") {
+      if(emtpy($filename))
+      {
+          $this->error_handler("Please provide a file name for attachment");
+          return false;
+      }
+      
       // Append to $attachment array
       $cur = count($this->attachment);
       $this->attachment[$cur][0] = $string;
