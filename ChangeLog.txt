@@ -1,5 +1,8 @@
 ChangeLog
 
+Version 1.20 (Sat, June 23 2001)
+* Added quoted-printable encoding (Patrice)
+
 Version 1.19 (Thu, Jun 21 2001)
 * Fixed MS Mail header bug
 * Added fix for Bcc problem with mail(). *Does not work on Win32*
