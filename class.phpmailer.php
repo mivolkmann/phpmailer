@@ -165,6 +165,15 @@ class phpmailer
      */
     var $LE           = "\n";
 
+    /**
+     *  Sets the hostname to use in Message-Id and Received headers
+     *  and as default HELO string. If empty, the value returned
+     *  by SERVER_NAME is used or 'localhost.localdomain'.
+     *  @access public
+     *  @var string
+     */
+    var $Hostname          = "";
+
 
     /////////////////////////////////////////////////
     // SMTP VARIABLES
@@ -189,11 +198,11 @@ class phpmailer
     var $Port        = 25;
 
     /**
-     *  Sets the SMTP HELO of the message.
+     *  Sets the SMTP HELO of the message (Default is $Hostname).
      *  @access public
      *  @var string
      */
-    var $Helo        = "localhost.localdomain";
+    var $Helo        = "";
 
     /**
      *  Sets SMTP authentication. Utilizes the Username and Password variables.
@@ -689,7 +698,10 @@ class phpmailer
         }
 
         // Must perform HELO before authentication
-        $smtp->Hello($this->Helo);
+	if ($this->Helo != '')
+            $smtp->Hello($this->Helo);
+        else
+            $smtp->Hello($this->get_server_hostname());
 
         // If user requests SMTP authentication
         if($this->SMTPAuth)
@@ -963,6 +975,7 @@ class phpmailer
         if($this->Mailer != "mail")
             $header[] = sprintf("Subject: %s%s", $this->encode_header(trim($this->Subject)), $this->LE);
 
+        $header[] = sprintf("Message-ID: <%s@%s>%s", $uniq_id, $this->get_server_hostname(), $this->LE);
         $header[] = sprintf("X-Priority: %d%s", $this->Priority, $this->LE);
         $header[] = sprintf("X-Mailer: phpmailer [version %s]%s", $this->Version, $this->LE);
         if($this->Sender == "")
@@ -1562,10 +1575,28 @@ class phpmailer
         // Check for vars because they might not exist.  Possibly
         // write a small retrieval function (that mailer can use too!)
 
-        $str = sprintf("Received: from phpmailer ([%s]) by %s " .
-               "with HTTP;%s\t %s%s",
-               $this->get_server_var("REMOTE_ADDR"),
-               $this->get_server_var("SERVER_NAME"),
+        if ($this->get_server_var('SERVER_NAME') != '')
+	{
+            $protocol = ($this->get_server_var('HTTPS') == 'on') ? 'HTTPS' : 'HTTP';
+	    $remote = $this->get_server_var('REMOTE_HOST');
+	    if ($remote == '')
+	        $remote = 'phpmailer';
+	    $remote .= ' (['.$this->get_server_var('REMOTE_ADDR').'])';
+	}
+        else
+	{
+            $protocol = 'local';
+	    $remote = $this->get_server_var('USER');
+	    if ($remote == '')
+	        $remote = 'phpmailer';
+	}
+
+        $str = sprintf("Received: from %s %s\tby %s " .
+               "with %s (phpmailer);%s\t%s%s",
+	       $remote,
+	       $this->LE,
+               $this->get_server_hostname(),
+	       $protocol,
                $this->LE,
                $this->rfc_date(),
                $this->LE);
@@ -1595,6 +1626,20 @@ class phpmailer
             return $_SERVER[$varName];
         else
             return "";
+    }
+
+    /**
+     * Returns the server hostname or 'localhost.localdomain' if unknown.
+     * @access private
+     * @return string
+     */
+    function get_server_hostname() {
+        if ($this->Hostname != '')
+	    return $this->Hostname;
+	elseif ($this->get_server_var('SERVER_NAME') != '')
+	    return $this->get_server_var('SERVER_NAME');
+	else
+	    return 'localhost.localdomain';
     }
 
     /**
