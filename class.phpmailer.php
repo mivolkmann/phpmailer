@@ -267,11 +267,6 @@ class phpmailer
      */
     var $subboundary     = false;
 
-    /**
-     *  Holds true if running a MS Windows OS.
-     *  @type bool
-     */
-    var $bWindows = false;
 
     /////////////////////////////////////////////////
     // VARIABLE METHODS
@@ -409,9 +404,6 @@ class phpmailer
         // Set whether the message is multipart/alternative
         if(!empty($this->AltBody))
             $this->ContentType = "multipart/alternative";
-
-        if(preg_match("/WIN/", PHP_OS)) // Check for MS Windows OS PHP version
-            $this->bWindows = true;
 
         $header = $this->create_header();
         if(!$body = $this->create_body())
@@ -794,8 +786,8 @@ class phpmailer
             $header[] = sprintf("Content-Transfer-Encoding: %s\r\n", $this->Encoding);
             $header[] = sprintf("Content-Type: %s; charset = \"%s\"",
                                 $this->ContentType, $this->CharSet);
-            // No additional lines when using MS Windows mail() fxn
-            if($this->Mailer != "mail" || !$this->bWindows)
+            // No additional lines when using mail() function
+            if($this->Mailer != "mail")
                 $header[] = "\r\n\r\n";
         }
 
