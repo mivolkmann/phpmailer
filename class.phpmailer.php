@@ -1050,7 +1050,8 @@ class phpmailer
                 $bndry->Encoding = $this->Encoding;
                 $body[] = $bndry->GetSource();
     
-                $body[] = sprintf("%s%s", $this->AltBody, $this->LE.$this->LE);
+                $body[] = $this->encode_string($this->AltBody, $this->Encoding);
+                $body[] = $this->LE.$this->LE;
     
                 $bndry = new Boundary($this->boundary[1]);
                 $bndry->CharSet = $this->CharSet;
@@ -1058,22 +1059,24 @@ class phpmailer
                 $bndry->Encoding = $this->Encoding;
                 $body[] = $bndry->GetSource();
                 
-                $body[] = sprintf("%s%s", $this->Body, $this->LE.$this->LE);
+                $body[] = $this->encode_string($this->Body, $this->Encoding);
+                $body[] = $this->LE.$this->LE;
     
                 // End the boundary
                 $body[] = sprintf("%s--%s--%s", $this->LE, 
                                   $this->boundary[1], $this->LE.$this->LE);
                 break;
             case "plain":
-                $body[] = $this->Body;
+                $body[] = $this->encode_string($this->Body, $this->Encoding);
                 break;
             case "attachments":
                 $bndry = new Boundary($this->boundary[1]);
                 $bndry->CharSet = $this->CharSet;
                 $bndry->ContentType = $this->ContentType;
                 $bndry->Encoding = $this->Encoding;
-                $body[] = sprintf("%s%s%s%s", $bndry->GetSource(false), $this->LE, 
-                                 $this->Body, $this->LE);
+                $body[] = $bndry->GetSource(false) . $this->LE;
+                $body[] = $this->encode_string($this->Body, $this->Encoding);
+                $body[] = $this->LE;
      
                 if(!$body[] = $this->attach_all())
                     return false;
@@ -1092,7 +1095,8 @@ class phpmailer
                 $bndry->Encoding = $this->Encoding;
                 $body[] = $bndry->GetSource() . $this->LE;
     
-                $body[] = sprintf("%s%s", $this->AltBody, $this->LE.$this->LE);
+                $body[] = $this->encode_string($this->AltBody, $this->Encoding);
+                $body[] = $this->LE.$this->LE;
     
                 // Create the HTML body
                 $bndry = new Boundary($this->boundary[2]);
@@ -1101,7 +1105,8 @@ class phpmailer
                 $bndry->Encoding = $this->Encoding;
                 $body[] = $bndry->GetSource() . $this->LE;
     
-                $body[] = sprintf("%s%s", $this->Body, $this->LE.$this->LE);
+                $body[] = $this->encode_string($this->Body, $this->Encoding);
+                $body[] = $this->LE.$this->LE;
 
                 $body[] = sprintf("%s--%s--%s", $this->LE, 
                                   $this->boundary[2], $this->LE.$this->LE);
@@ -1110,9 +1115,7 @@ class phpmailer
                     return false;
                 break;
         }
-        // Add the encode string code here
         $sBody = join("", $body);
-        $sBody = $this->encode_string($sBody, $this->Encoding);
 
         return $sBody;
     }
@@ -1281,7 +1284,7 @@ class phpmailer
             $encoded .= $this->LE;
 
         // Replace every high ascii, control and = characters
-        $encoded = preg_replace("/([\001-\010\013\014\016-\037\075\177-\377])/e",
+        $encoded = preg_replace('/([\000-\010\013\014\016-\037\075\177-\377])/e',
                   "'='.sprintf('%02X', ord('\\1'))", $encoded);
         // Replace every spaces and tabs when it's the last character on a line
         $encoded = preg_replace("/([\011\040])".$this->LE."/e",
@@ -1619,12 +1622,12 @@ class Boundary
      * @return string
      */
     function GetSource($bLineEnding = true) {
-        $ret = array();
+        $mime = array();
         $mime[] = sprintf("--%s%s", $this->ID, $this->LE);
         $mime[] = sprintf("Content-Type: %s; charset = \"%s\"%s", 
                           $this->ContentType, $this->CharSet, $this->LE);
-        //$mime[] = sprintf("Content-Transfer-Encoding: %s%s", $this->Encoding, 
-        //                  $this->LE);
+        $mime[] = sprintf("Content-Transfer-Encoding: %s%s", $this->Encoding, 
+                          $this->LE);
         
         if(strlen($this->Disposition) > 0)
         {
