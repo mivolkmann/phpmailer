@@ -627,10 +627,8 @@ class PHPMailer
         {
             for($i = 1; $i < count($addr); $i++)
                 $addr_str .= ", " . $this->AddrFormat($addr[$i]);
-            $addr_str .= $this->LE;
         }
-        else
-            $addr_str .= $this->LE;
+        $addr_str .= $this->LE;
 
         return $addr_str;
     }
@@ -829,7 +827,7 @@ class PHPMailer
             case "attachments":
                 // fall through
             case "alt_attachments":
-                if($this->EmbeddedImageCount() > 0)
+                if($this->InlineImageExists())
                 {
                     $result .= sprintf("Content-Type: %s;%s\ttype=\"text/html\";%s\tboundary=\"%s\"%s", 
                                     "multipart/related", $this->LE, $this->LE, 
@@ -996,7 +994,7 @@ class PHPMailer
      * @param string $path Path to the attachment.
      * @param string $name Overrides the attachment name.
      * @param string $encoding File encoding (see $Encoding).
-     * @param string $type File extension type.
+     * @param string $type File extension (MIME) type.
      * @return bool
      */
     function AddAttachment($path, $name = "", $encoding = "base64", 
@@ -1011,7 +1009,6 @@ class PHPMailer
         if($name == "")
             $name = $filename;
 
-        // Append to $attachment array
         $cur = count($this->attachment);
         $this->attachment[$cur][0] = $path;
         $this->attachment[$cur][1] = $filename;
@@ -1114,22 +1111,18 @@ class PHPMailer
               // chunk_split is found in PHP >= 3.0.6
               $encoded = chunk_split(base64_encode($str), 76, $this->LE);
               break;
-
           case "7bit":
           case "8bit":
               $encoded = $this->FixEOL($str);
               if (substr($encoded, -(strlen($this->LE))) != $this->LE)
                 $encoded .= $this->LE;
               break;
-
           case "binary":
               $encoded = $str;
               break;
-
           case "quoted-printable":
               $encoded = $this->EncodeQP($str);
               break;
-
           default:
               $this->SetError($this->Lang("encoding") . $encoding);
               break;
@@ -1249,7 +1242,7 @@ class PHPMailer
      * @param string $string String attachment data.
      * @param string $filename Name of the attachment.
      * @param string $encoding File encoding (see $Encoding).
-     * @param string $type File extension type.
+     * @param string $type File extension (MIME) type.
      * @return void
      */
     function AddStringAttachment($string, $filename, $encoding = "base64", 
@@ -1268,13 +1261,15 @@ class PHPMailer
     
     /**
      * Adds an embedded attachment.  This can include images, sounds, and 
-     * just about any other document.
+     * just about any other document.  Make sure to set the $type to an 
+     * image type.  For JPEG images use "image/jpeg" and for GIF images 
+     * use "image/gif".
      * @param string $path Path to the attachment.
      * @param string $cid Content ID of the attachment.  Use this to identify 
      *        the Id for accessing the image in an HTML form.
      * @param string $name Overrides the attachment name.
      * @param string $encoding File encoding (see $Encoding).
-     * @param string $type File extension type.
+     * @param string $type File extension (MIME) type.  
      * @return bool
      */
     function AddEmbeddedImage($path, $cid, $name = "", $encoding = "base64", 
@@ -1305,16 +1300,19 @@ class PHPMailer
     }
     
     /**
-     * Returns the number of embedded images in an email.
+     * Returns true if an inline attachment is present.
      * @access private
-     * @return int
+     * @return bool
      */
-    function EmbeddedImageCount() {
-        $result = 0;
+    function InlineImageExists() {
+        $result = false;
         for($i = 0; $i < count($this->attachment); $i++)
         {
             if($this->attachment[$i][6] == "inline")
-                $result++;
+            {
+                $result = true;
+                break;
+            }
         }
         
         return $result;
@@ -1401,7 +1399,7 @@ class PHPMailer
     }
 
     /**
-     * Returns the proper RFC 822 formatted date. Returns string.
+     * Returns the proper RFC 822 formatted date. 
      * @access private
      * @return string
      */
@@ -1416,7 +1414,7 @@ class PHPMailer
     }
 
     /**
-     * Returns Received header for message tracing. Returns string.
+     * Returns Received header for message tracing. 
      * @access private
      * @return string
      */
@@ -1497,7 +1495,7 @@ class PHPMailer
         if(isset($this->language[$key]))
             return $this->language[$key];
         else
-            return "";
+            return "Language string failed to load: " . $key;
     }
     
     /**
@@ -1509,7 +1507,7 @@ class PHPMailer
     }
 
     /**
-     * Changes every end of line from CR or LF to CRLF.  Returns string.
+     * Changes every end of line from CR or LF to CRLF.  
      * @access private
      * @return string
      */
@@ -1521,7 +1519,7 @@ class PHPMailer
     }
 
     /**
-     * Adds a custom header.  Returns void.
+     * Adds a custom header. 
      * @return void
      */
     function AddCustomHeader($custom_header) {
