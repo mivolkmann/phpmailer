@@ -936,8 +936,13 @@ class phpmailer
         $this->boundary[2] = "b2_" . $uniq_id;
 
         // To be created automatically by mail()
-        if(($this->Mailer != "mail") && (count($this->to) > 0))
-            $header[] = $this->addr_append("To", $this->to);
+        if($this->Mailer != "mail")
+        {
+            if(count($this->to) > 0))
+                $header[] = $this->addr_append("To", $this->to);
+            else if (count($this->cc) == 0)
+                $header[] = "To: undisclosed-recipients:;".$this->LE;
+        }
 
         $from = array();
         $from[0][0] = trim($this->From);
