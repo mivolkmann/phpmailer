@@ -1,7 +1,10 @@
 ChangeLog
 
-Version 1.20 (Sat, June 23 2001)
+Version 1.20 (Mon, June 25 2001)
 * Added quoted-printable encoding (Patrice)
+* Set Version as public and removed PrintVersion()
+* Changed phpdoc to only display public variables and methods
+* Re-worded some documentation
 
 Version 1.19 (Thu, Jun 21 2001)
 * Fixed MS Mail header bug
