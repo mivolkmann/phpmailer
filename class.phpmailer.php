@@ -159,6 +159,27 @@ class phpmailer
    var $Helo        = "localhost.localdomain";
 
    /**
+    *  Sets SMTP authentication. Default value is false (off).
+    *  @public
+    *  @type bool
+    */
+   var $SMTPAuth    = false;
+
+   /**
+    *  Sets SMTP username. Default value is "".
+    *  @public
+    *  @type string
+    */
+   var $Username    = "";
+
+   /**
+    *  Sets SMTP password. Default value is "".
+    *  @public
+    *  @type string
+    */
+   var $Password    = "";
+
+   /**
     *  Sets the SMTP server timeout. Default value is 10.
     *  @public
     *  @type int
@@ -354,7 +375,7 @@ class phpmailer
          return false;
 
       //echo "<pre>".$header . $body . "</pre>"; // debugging
-      
+
       // Choose the mailer
       if($this->Mailer == "sendmail")
       {
@@ -447,7 +468,7 @@ class phpmailer
    }
 
    /**
-    * Sends mail via SMTP using PhpSMTP (Author: 
+    * Sends mail via SMTP using PhpSMTP (Author:
     * Chris Ryan).  Returns bool.
     * @private
     * @returns bool
@@ -457,6 +478,7 @@ class phpmailer
       include_once("class.smtp.php"); // Load code only if asked
 
       $smtp = new SMTP;
+
       $smtp->do_debug = $this->SMTPDebug;
 
       // Try to connect to all SMTP servers
@@ -478,7 +500,19 @@ class phpmailer
          return false;
       }
 
+      // Must perform HELO before authentication
       $smtp->Hello($this->Helo);
+
+      // If user requests SMTP authentication
+      if($this->SMTPAuth)
+      {
+         if(!$smtp->Authenticate($this->Username, $this->Password))
+         {
+            $this->error_handler("SMTP Error: Could not authenticate");
+            return false;
+         }
+      }
+
       if ($this->Sender == "")
          $smtp->Mail(sprintf("<%s>", $this->From));
       else
@@ -863,10 +897,10 @@ class phpmailer
 
       return $encoded;
    }
-   
+
    /**
-   * Adds the string attachment to the list. This method can be used 
-   * to attach ascii data.  It can also attach binary data, such as 
+   * Adds the string attachment to the list. This method can be used
+   * to attach ascii data.  It can also attach binary data, such as
    * a BLOB record from a database. Returns false if missing filename.
    * @public
    * @returns bool
@@ -877,7 +911,7 @@ class phpmailer
           $this->error_handler("Please provide a file name for attachment");
           return false;
       }
-      
+
       // Append to $attachment array
       $cur = count($this->attachment);
       $this->attachment[$cur][0] = $string;
@@ -886,7 +920,7 @@ class phpmailer
       $this->attachment[$cur][3] = $encoding;
       $this->attachment[$cur][4] = $type;
       $this->attachment[$cur][5] = true; // isString
-      
+
       return true;
    }
 
