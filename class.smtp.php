@@ -421,6 +421,7 @@
          * SMTP CODE SUCCESS: 211,214
          * SMTP CODE ERROR  : 500,501,502,504,421
          *
+         */
         function Help($keyword="") {
             $this->error = null; # to avoid confusion
 

@@ -1,5 +1,10 @@
 ChangeLog
 
+Version 1.28 (Mon, July 30 2001)
+* Fixed a typo in SMTP class
+* Fixed header issue with Imail (win32) SMTP server
+* Made fopen() calls for attachments use "rb" to fix win32 error
+
 Version 1.25 (Mon, July 02 2001)
 * Added RFC 822 date fix (Patrice)
 * Added improved error handling by adding a $ErrorInfo variable
