@@ -1,5 +1,9 @@
 ChangeLog
 
+Version 1.41 (Wed, Aug 22 2001)
+* Fixed AltBody bug w/o attachments
+* Fixed rfc_date() for certain mail servers
+
 Version 1.40 (Sun, Aug 12 2001)
 * Added multipart/alternative support (AltBody)
 * Documentation update

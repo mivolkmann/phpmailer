@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.40, Created 08/12/2001
+// Version 1.41, Created 08/12/2001
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -142,7 +142,7 @@ class phpmailer
     *  @public
     *  @type string
     */
-   var $Version          = "phpmailer [version 1.40]";
+   var $Version          = "1.41";
 
 
    /////////////////////////////////////////////////
@@ -167,7 +167,8 @@ class phpmailer
    var $Port        = 25;
 
    /**
-    *  Sets the CharSet of the message. Default value is "localhost.localdomain".
+    *  Sets the CharSet of the message.
+    *  Default value is "localhost.localdomain".
     *  @public
     *  @type string
     */
@@ -708,7 +709,7 @@ class phpmailer
          $header[] = sprintf("Subject: %s\r\n", trim($this->Subject));
 
       $header[] = sprintf("X-Priority: %d\r\n", $this->Priority);
-      $header[] = sprintf("X-Mailer: %s\r\n", $this->Version);
+      $header[] = sprintf("X-Mailer: phpmailer [version %s]\r\n", $this->Version);
       $header[] = sprintf("Return-Path: %s\r\n", trim($this->From));
 
       // Add custom headers
@@ -734,7 +735,8 @@ class phpmailer
       else
       {
          $header[] = sprintf("Content-Transfer-Encoding: %s\r\n", $this->Encoding);
-         $header[] = sprintf("Content-Type: %s; charset = \"%s\"\r\n\r\n", $this->ContentType, $this->CharSet);
+         $header[] = sprintf("Content-Type: %s; charset = \"%s\"\r\n\r\n",
+                             $this->ContentType, $this->CharSet);
       }
 
       return(join("", $header));
@@ -769,12 +771,12 @@ class phpmailer
          $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
          $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-         $mime[] = sprintf("%s\r\n\r\n", $this->Body_mp_html);
+         $mime[] = sprintf("%s\r\n\r\n", $this->Body);
 
          $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
          $mime[] = sprintf("Content-Type: text/plain; charset = \"%s\";\r\n", $this->CharSet);
          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-         $mime[] = sprintf("%s\r\n\r\n", $this->Body_mp_plain);
+         $mime[] = sprintf("%s\r\n\r\n", $this->AltBody);
 
          $mime[] = sprintf("\r\n--Boundary-=%s--\r\n\r\n", $this->subboundary);
 
@@ -980,9 +982,11 @@ class phpmailer
          $encoded .= "\r\n";
 
       // Replace every high ascii, control and = characters
-      $encoded = preg_replace("/([\001-\010\013\014\016-\037\075\177-\377])/e", "'='.sprintf('%02X', ord('\\1'))", $encoded);
+      $encoded = preg_replace("/([\001-\010\013\014\016-\037\075\177-\377])/e",
+                 "'='.sprintf('%02X', ord('\\1'))", $encoded);
       // Replace every spaces and tabs when it's the last character on a line
-      $encoded = preg_replace("/([\011\040])\r\n/e", "'='.sprintf('%02X', ord('\\1')).'\r\n'", $encoded);
+      $encoded = preg_replace("/([\011\040])\r\n/e",
+                 "'='.sprintf('%02X', ord('\\1')).'\r\n'", $encoded);
 
       // Maximum line length of 76 characters before CRLF (74 + space + '=')
       $encoded = $this->WordWrap($encoded, 74, true);
@@ -1103,7 +1107,7 @@ class phpmailer
         $tz = date("Z");
         $tzs = ($tz < 0) ? "-" : "+";
         $tz = abs($tz);
-        $tz = $tz/36 + $tz % 3600;
+        $tz = ($tz/3600)*100 + ($tz%3600)/60;
         $date = sprintf("%s %s%04d", date("D, j M Y H:i:s"), $tzs, $tz);
         return $date;
    }
