@@ -66,7 +66,7 @@ $mail = new my_phpmailer;
 $mail->AddAddress("josh@site.com", "Josh Adams");
 $mail->Subject = "Here is the subject";
 $mail->Body = "This is the message body";
-$mail->AddAttachment("c:/temp/11-10-00.zip");
+$mail->AddAttachment("c:/temp/11-10-00.zip", "new_name.zip");  // optional name
 $mail->Send();
 
 echo "Message was sent successfully";
