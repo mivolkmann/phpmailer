@@ -407,7 +407,11 @@ class phpmailer
         if(!empty($this->AltBody))
             $this->ContentType = "multipart/alternative";
 
-        $header = $this->create_header();
+        // Attach sender information & date
+        $header = $this->received();
+        $header .= sprintf("Date: %s\r\n", $this->rfc_date());
+        $header .= $this->create_header();
+
         if(!$body = $this->create_body())
             return false;
 
@@ -436,6 +440,92 @@ class phpmailer
         }
 
         return true;
+    }
+    
+    /**
+     * Sends mail message to an assigned queue directory.  Returns false on failure 
+     * or the message file name if success.
+     * @public
+     * @returns string
+     */
+    function SendToQueue($queuePath) {
+        $message = array();
+        $header = "";
+        $body = "";
+
+        if(count($this->to) < 1)
+        {
+            $this->error_handler("You must provide at least one recipient email address");
+            return false;
+        }
+
+        // Set whether the message is multipart/alternative
+        if(!empty($this->AltBody))
+            $this->ContentType = "multipart/alternative";
+
+        $header = $this->create_header();
+        if(!$body = $this->create_body())
+            return false;
+
+        // Seed randomizer
+		srand((double)microtime() * 1000000);
+		$msg_id = rand();
+        
+        $fp = fopen($queuePath . $msg_id . ".pqm", "w");
+        if(!$fp)
+        {
+            $this->error_handler(sprintf("Could not write to %s directory", $queuePath));
+            return false;
+        }
+       
+        $message[] = "----START PQM HEADER----\n";
+        $message[] = sprintf("SendDate: %s\n", time()); // This will later be a queue time
+        $message[] = sprintf("Mailer: %s\n", $this->Mailer);
+
+        // Choose the mailer
+        if($this->Mailer == "sendmail")
+        {
+            $message[] = sprintf("Sendmail: %s\n", $this->Sendmail);
+            $message[] = sprintf("Sender: %s\n", $this->Sender);
+        }
+        elseif($this->Mailer == "mail")
+        {
+            $message[] = sprintf("Sender: %s\n", $this->Sender);
+            $message[] = sprintf("Subject: %s\n", $this->Subject);
+            $message[] = sprintf("to: %s\n", $this->addr_list($this->to));
+        }
+        elseif($this->Mailer == "smtp")
+        {
+            $message[] = sprintf("Host: %s\n", $this->Host);
+            $message[] = sprintf("Port: %d\n", $this->Port);
+            $message[] = sprintf("Helo: %s\n", $this->Helo);
+            
+            if($this->SMTPAuth)
+                $auth_no = 1;
+            else
+                $auth_no = 0;
+            $message[] = sprintf("SMTPAuth: %d\n", $auth_no);
+            $message[] = sprintf("Username: %s\n", $this->Username);
+            $message[] = sprintf("Password: %s\n", $this->Password);
+            $message[] = sprintf("From: %s\n", $this->From);
+
+            $message[] = sprintf("to: %s\n", $this->addr_list($this->to));
+            $message[] = sprintf("cc: %s\n", $this->addr_list($this->cc));
+            $message[] = sprintf("bcc: %s\n", $this->addr_list($this->bcc));
+        }
+        else
+        {
+            $this->error_handler(sprintf("%s mailer is not supported", $this->Mailer));
+            return false;
+        }
+
+        $message[] = "----END PQM HEADER----\n"; // end of pqm header        
+        $message[] = $header;
+        $message[] = $body;
+       
+        fwrite($fp, join("", $message));
+
+        return ($msg_id . ".pqm");
     }
 
     /**
@@ -643,6 +733,23 @@ class phpmailer
 
         return($addr_str);
     }
+    
+    /**
+     * Creates a semicolon delimited list for use in pqm files.
+     * @private
+     * @returns string
+     */
+    function addr_list($list_array) {
+        $addr_list = "";
+        for($i = 0; $i < count($list_array); $i++)
+        {
+            if($i > 0)
+                $addr_list .= ";";
+            $addr_list .= $list_array[$i][0];
+        }
+        
+        return $addr_list;
+    }
 
     /**
      * Wraps message for use with mailers that do not
@@ -737,8 +844,6 @@ class phpmailer
      */
     function create_header() {
         $header = array();
-        $header[] = $this->received();
-        $header[] = sprintf("Date: %s\r\n", $this->rfc_date());
 
         // To be created automatically by mail()
         if($this->Mailer != "mail")
@@ -1177,7 +1282,7 @@ class phpmailer
         global $HTTP_ENV_VARS;
 
         // IIS & Apache use different global variables
-        if($HTTP_SERVER_VARS["REMOTE_ADDR"] == "")
+        if(!isset($HTTP_SERVER_VARS["REMOTE_ADDR"]))
             $http_vars = $HTTP_ENV_VARS; // Apache found
         else
             $http_vars = $HTTP_SERVER_VARS; // IIS found
