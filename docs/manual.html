@@ -62,66 +62,87 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 <h3>General Variables</h3>
 <p align="center">
 <table cellpadding="2" width="100%" border="1">
+
 <tr>
 <td class="head">Variable</td>
 <td class="head">Description</td>
 <td class="head">Default Value</td>
 </tr>
+
 <tr>
 <td class="greytab">string Mailer</td>
-<td class="whitetab">Set the mailer ("mail", "sendmail", or "smtp")</td>
+<td class="whitetab">Method to send mail: ("mail", "sendmail", or "smtp")</td>
 <td class="default">mail</td>
 <td>
+</tr>
+
 <tr>
 <td class="greytab">int Priority</td>
-<td class="whitetab">Set email priority (1 (High), 3 (Normal), 5 (low)</td>
+<td class="whitetab">Email priority (1 (High), 3 (Normal), 5 (low)</td>
 <td class="default">3</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab">string CharSet</td>
-<td class="whitetab">Set CharSet</td>
+<td class="whitetab">CharSet of message</td>
 <td class="default">iso-8859-1</td>
 </tr>
+
+<tr>
 <td class="greytab">string ContentType</td>
-<td class="whitetab">Set ContentType</td>
+<td class="whitetab">ContentType of message</td>
 <td class="default">text/plain</td>
 </tr>
+
 <tr>
 <td class="greytab">string Encoding</td>
-<td class="whitetab">Set Content-Transfer-Encoding</td>
+<td class="whitetab">Content-Transfer-Encoding of message</td>
 <td class="default">8bit</td>
 </tr>
+
 <tr>
 <td class="greytab">string From</td>
-<td class="whitetab">Set email address of sender</td>
+<td class="whitetab">Sender email address</td>
 <td class="default">root@localhost</td>
 </tr>
+
 <tr>
 <td class="greytab">string FromName</td>
-<td class="whitetab">Set name of sender</td>
+<td class="whitetab">Sender name</td>
 <td class="default">root</td>
 </tr>
+
 <tr>
 <td class="greytab">string Subject</td>
-<td class="whitetab">Set message subject</td>
+<td class="whitetab">Message subject text</td>
 <td class="default">none</td>
 </tr>
+
 <tr>
 <td class="greytab">string Body</td>
-<td class="whitetab">Set message body</td>
+<td class="whitetab">Message body text</td>
 <td class="default">none</td>
 </tr>
+
+<tr>
+<td class="greytab">string Sendmail</td>
+<td class="whitetab">Location of sendmail program</td>
+<td class="default">/usr/sbin/sendmail</td>
+</tr>
+
 <tr>
 <td class="greytab">int WordWrap</td>
 <td class="whitetab">Set word wrap on message body</td>
 <td class="default">false (off)</td>
 </tr>
+
 <tr>
 <td class="greytab">bool MailerDebug</td>
 <td class="whitetab">Turn debugging on or off</td>
 <td class="default">true (on)</td>
 </tr>
+
 <tr>
 <td class="greytab">bool UseMSMailHeaders</td>
 <td class="whitetab">Use Microsoft mail client message headers 
@@ -134,32 +155,38 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 <h3>SMTP-specific Variables</h3>
 <p align="center">
 <table cellpadding="2" width="100%" border="1">
+
 <tr>
 <td class="head">Variable</td>
 <td class="head">Description</td>
 <td class="head">Default Value</td>
 </tr>
+
 <tr>
 <td class="greytab">string Host</td>
 <td class="whitetab">Set mail servers (separated by semicolons (";")</td>
 <td class="default">localhost</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab">int Port</td>
 <td class="whitetab">SMTP port</td>
 <td class="default">25</td>
 </tr>
+
 <tr>
 <td class="greytab">string Helo</td>
 <td class="whitetab">Set SMTP HELO</td>
 <td class="default">localhost.localdomain</td>
 </tr>
+
 <tr>
 <td class="greytab">int Timeout</td>
 <td class="whitetab">Set connection timeout</td>
 <td class="default">10 (seconds)</td>
 </tr>
+
 <tr>
 <td class="greytab">bool SMTPDebug</td>
 <td class="whitetab">Set SMTP debugging on or off</td>
@@ -175,71 +202,127 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 <td class="head">Method</td>
 <td class="head">Description</td>
 </tr>
+
 <tr>
 <td class="greytab2">IsHTML(bool)</td>
 <td class="whitetab2">Turn HTML format on/off</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">IsSMTP()</td>
 <td class="whitetab2">Set mailer to SMTP</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">IsMail()</td>
 <td class="whitetab2">Set mailer to PHP mail() function</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">IsSendmail()</td>
 <td class="whitetab2">Set mailer to $sendmail</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">IsQmail()</td>
 <td class="whitetab2">Set $sendmail to /var/qmail/bin/qmail-inject</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">AddAddress(string address, string name)</td>
-<td class="whitetab2">Add a "to" address (name optional)</td>
+<td class="whitetab2">Add a <i>TO</i> address (name optional)</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">AddCC(string address, string name)</td>
-<td class="whitetab2">Add a "cc" address (name optional)</td>
+<td class="whitetab2">Add a <i>CC</i> address (name optional)</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">AddBCC(string address, string name)</td>
-<td class="whitetab2">Add a "bcc" address (name optional)</td>
+<td class="whitetab2">Add a <i>BCC</i> address (name optional)</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">AddReplyTo(string address, string name)</td>
-<td class="whitetab2">Add a "Reply-To" address (name optional)</td>
+<td class="whitetab2">Add a <i>Reply-To</i> address (name optional)</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">AddAttachment(string path)</td>
 <td class="whitetab2">Add an attachment</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">AddCustomHeader(string header)</td>
 <td class="whitetab2">Add a custom email header</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">Send()</td>
 <td class="whitetab2">Send the message</td>
 <td>
 </tr>
+
 <tr>
 <td class="greytab2">PrintVersion()</td>
 <td class="whitetab2">Print out the version number of phpmailer</td>
 <td>
 </tr>
+
+<tr>
+<td class="greytab2">ClearAddresses()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>TO</i> array</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">ClearCCs()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>CC</i> array</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">ClearBCCs()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>BCC</i> array</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">ClearReplyTos()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>ReplyTo</i> array</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">ClearAllRecipients()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>TO</i>, <i>CC</i> and <i>BCC</i> array</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">ClearAttachments()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>attachment</i> array</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">ClearCustomHeaders()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>CustomHeader</i> array</td>
+<td>
+</tr>
+
 </table>
 <p>
 

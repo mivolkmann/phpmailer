@@ -2,7 +2,7 @@
 /////////////////////////////////////////////////
 // phpmailer - PHP email class
 // 
-// Version 0.98, 05/22/2001
+// Version 1.02, 05/23/2001
 //
 // Class for sending email using either 
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -30,7 +30,7 @@ class phpmailer
 	var $Body             = "";
 	var $WordWrap         = false;
 	var $Mailer           = "mail";
-	var $sendmail         = "/usr/sbin/sendmail";
+	var $Sendmail         = "/usr/sbin/sendmail";
 	var $MailerDebug      = true;
 	var $UseMSMailHeaders = false;
 
@@ -42,7 +42,7 @@ class phpmailer
 	var $SMTPDebug   = false;
 	
 	// "Private" variables
-	var $Version       = "phpmailer [version .98]";
+	var $Version       = "phpmailer [version 1.02]";
 	var $to            = array();
 	var $cc            = array();
 	var $bcc           = array();
@@ -50,6 +50,7 @@ class phpmailer
 	var $attachment    = array();
 	var $CustomHeader  = array();	
 	var $boundary      = false;
+	var $SMTPInclude   = false;
 	
 	/////////////////////////////////////////////////
 	// VARIABLE METHODS
@@ -63,24 +64,24 @@ class phpmailer
 			$this->ContentType = "text/plain";
 	}
 
-	// Sets mailer to use SMTP
+	// Sets Mailer to use SMTP
 	function IsSMTP() {
-		$this->mailer = "smtp";
+		$this->Mailer = "smtp";
 	}
 
-	// Sets mailer to use PHP mail() function
+	// Sets Mailer to use PHP mail() function
 	function IsMail() {
-		$this->mailer = "mail";
+		$this->Mailer = "mail";
 	}
 
-	// Sets mailer to directly use $sendmail program
+	// Sets Mailer to directly use $Sendmail program
 	function IsSendmail() {
-		$this->mailer = "sendmail";
+		$this->Mailer = "sendmail";
 	}
 
-	// Sets $sendmail to qmail MTA
+	// Sets $Sendmail to qmail MTA
 	function IsQmail() {
-		$this->sendmail = "/var/qmail/bin/qmail-inject";
+		$this->Sendmail = "/var/qmail/bin/qmail-inject";
 	}
 
 
@@ -130,22 +131,22 @@ class phpmailer
 		$body = $this->create_body();
 		
       // Choose the mailer
-		if($this->mailer == "sendmail")
+		if($this->Mailer == "sendmail")
 			$this->sendmail_send($header, $body);
-		elseif($this->mailer == "mail")
+		elseif($this->Mailer == "mail")
 			$this->mail_send($header, $body);
-		elseif($this->mailer == "smtp")
+		elseif($this->Mailer == "smtp")
 			$this->smtp_send($header, $body);
 		else
-			$this->error_handler(sprintf("%s mailer is not supported", $this->mailer));
+			$this->error_handler(sprintf("%s mailer is not supported", $this->Mailer));
 	}
 	
 	// Send using the $sendmail program
 	function sendmail_send($header, $body) {
-		$sendmail = sprintf("%s -f %s -t", $this->sendmail, $this->From);
+		$sendmail = sprintf("%s -f %s -t", $this->Sendmail, $this->From);
 
 		if(!@$mail = popen($sendmail, "w"))
-			$this->error_handler(sprintf("Could not open %s", $this->sendmail));
+			$this->error_handler(sprintf("Could not open %s", $this->Sendmail));
 		
 		fputs($mail, $header);
 		fputs($mail, $body);
@@ -170,7 +171,12 @@ class phpmailer
 	// Send message via SMTP using PhpSMTP
 	// PhpSMTP written by Chris Ryan
 	function smtp_send($header, $body) {
-		include("class.smtp.php"); // Load code only if asked
+	   // Include SMTP class code, but not twice
+	   if($this->SMTPInclude == false)
+	   {
+	      include("class.smtp.php"); // Load code only if asked
+	      $this->SMTPInclude = true;
+	   }
 		$smtp = new SMTP;
 		$smtp->do_debug = $this->SMTPDebug;
 		
@@ -234,8 +240,8 @@ class phpmailer
 	// automatically perform wrapping
 	// Written by philippe@cyberabuse.org
 	function wordwrap($message, $length) {
-		$line=explode("\n", $message);
-		$message="";
+		$line = explode("\n", $message);
+		$message = "";
 		for ($i=0 ;$i < count($line); $i++) 
 		{
 			$line_part = explode(" ", trim($line[$i]));
@@ -381,6 +387,48 @@ class phpmailer
 	}
 	
 	/////////////////////////////////////////////////
+	// MESSAGE RESET METHODS
+	/////////////////////////////////////////////////
+	
+	// Clears any recipients assigned in the TO array
+	function ClearAddresses() {
+	   $this->to = array();
+	}
+	
+	// Clears any recipients assigned in the CC array
+	function ClearCCs() {
+	   $this->cc = array();
+	}
+	
+	// Clears any recipients assigned in the BCC array
+	function ClearBCCs() {
+	   $this->bcc = array();
+	}
+	
+	// Clears any recipients assigned in the ReplyTo array
+	function ClearReplyTos() {
+	   $this->ReplyTo = array();
+	}
+	
+	// Clears all recipients assigned int the TO, CC and BCC array
+	function ClearAllRecipients() {
+	   $this->to = array();
+	   $this->cc = array();
+	   $this->bcc = array();
+	}
+	
+	// Clear all previously set attachments
+	function ClearAttachments() {
+	   $this->attachment = array();
+	}
+	
+	// Clear all custom headers
+	function ClearCustomHeaders() {
+	   $this->CustomHeader = array();
+	}
+	
+	
+	/////////////////////////////////////////////////
 	// MISCELLANEOUS METHODS
 	/////////////////////////////////////////////////
 
@@ -423,4 +471,5 @@ class phpmailer
 	}
 }
 
+// End of class
 ?>
