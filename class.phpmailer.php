@@ -1093,13 +1093,13 @@ class PHPMailer
         switch(strtolower($encoding)) {
           case "base64":
               // chunk_split is found in PHP >= 3.0.6
-              $encoded = chunk_split(base64_encode($str));
+              $encoded = chunk_split(base64_encode($str), 76, $this->LE);
               break;
 
           case "7bit":
           case "8bit":
               $encoded = $this->fix_eol($str);
-              if (substr($encoded, -2) != $this->LE)
+              if (substr($encoded, -(strlen($this->LE))) != $this->LE)
                 $encoded .= $this->LE;
               break;
 
@@ -1179,7 +1179,7 @@ class PHPMailer
      */
     function encode_qp ($str) {
         $encoded = $this->fix_eol($str);
-        if (substr($encoded, -2) != $this->LE)
+        if (substr($encoded, -(strlen($this->LE))) != $this->LE)
             $encoded .= $this->LE;
 
         // Replace every high ascii, control and = characters
