@@ -522,7 +522,7 @@ class phpmailer
 	 */
 	function create_header() {
 		$header = array();
-		$header[] = sprintf("Date: %s\n", date("D M j G:i:s T"));
+		$header[] = sprintf("Date: %s\n", date("D, j M Y H:i:s T"));
 		$header[] = $this->addr_append("To", $this->to);
 		$header[] = sprintf("From: %s <%s>\n", $this->FromName, trim($this->From));
 		if(count($this->cc) > 0)
@@ -586,7 +586,8 @@ class phpmailer
 	/////////////////////////////////////////////////
 
 	/**
-	 * AddAttachment check if attachment is valid and add to list.  Returns bool.
+	 * AddAttachment check if attachment is valid and add to list.  
+	 * Returns false if the file was not found.
 	 * @public
 	 * @returns bool
 	 */
@@ -766,9 +767,9 @@ class phpmailer
 	}
 
 	/**
-	 * UseMSMailHeaders adds all the Microsoft message headers.  Returns void.
+	 * UseMSMailHeaders adds all the Microsoft message headers.  Returns string.
 	 * @public
-	 * @returns void
+	 * @returns string
 	 */
 	function UseMSMailHeaders() {
 	   $MSHeader = "";

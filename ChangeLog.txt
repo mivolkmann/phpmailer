@@ -1,5 +1,9 @@
 ChangeLog
 
+Version 1.09 (Fri, June 08 2001)
+* Changed date header to work with Netscape mail programs
+* Altered phpdoc documentation
+
 Version 1.08 (Tue, June 05 2001)
 * Added enhanced error-checking
 * Added phpdoc documentation to source
