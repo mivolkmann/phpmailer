@@ -329,8 +329,11 @@
 
                 # now send the lines to the server
                 while(list(,$line_out) = @each($lines_out)) {
-                    if($line_out[0] == ".") {
-                        $line_out = "." . $line_out;
+                    if(strlen($line_out) > 0)
+                    {
+                        if($line_out[0] == ".") {
+                            $line_out = "." . $line_out;
+                        }
                     }
                     fputs($this->smtp_conn,$line_out . $this->CRLF);
                 }
