@@ -455,15 +455,23 @@ class phpmailer
     }
     
     /**
-     * Sends mail message to an assigned queue directory.  Returns false on failure 
+     * Sends mail message to an assigned queue directory.  Has an optional 
+     * sendTime argument.  This is used when the user wants the 
+     * message to be sent from the queue at a predetermined time. 
+     * The data must be a valid timestamp like that returned from 
+     * the time() or strtotime() functions.  Returns false on failure 
      * or the message file name if success.
      * @public
      * @returns string
      */
-    function SendToQueue($queuePath) {
+    function SendToQueue($queuePath, $sendTime = "") {
         $message = array();
         $header = "";
         $body = "";
+        
+        // If invalid or empty just set to the current time
+        if(empty($sendTime) || !is_int($sendTime))
+            $sendTime = time();
 
         if((count($this->to) + count($this->cc) + count($this->bcc)) < 1)
         {
@@ -491,7 +499,7 @@ class phpmailer
         }
        
         $message[] = "----START PQM HEADER----\r\n";
-        $message[] = sprintf("SendDate: %s\r\n", time()); // This will later be a queue time
+        $message[] = sprintf("SendTime: %s\r\n", $sendTime);
         $message[] = sprintf("Mailer: %s\r\n", $this->Mailer);
 
         // Choose the mailer
@@ -1289,23 +1297,40 @@ class phpmailer
      * @returns string
      */
     function received() {
-        global $HTTP_SERVER_VARS;
-        global $HTTP_ENV_VARS;
-
-        // IIS & Apache use different global variables
-        if(!isset($HTTP_SERVER_VARS["REMOTE_ADDR"]))
-            $http_vars = $HTTP_ENV_VARS; // Apache found
-        else
-            $http_vars = $HTTP_SERVER_VARS; // IIS found
+        // Check for vars because they might not exist.  Possibly
+        // write a small retrieval function (that mailer can use too!)
 
         $str = sprintf("Received: from phpmailer ([%s]) by %s " .
-               "with HTTP (%s);\r\n\t %s\r\n",
-               $http_vars["REMOTE_ADDR"],
-               $http_vars["SERVER_NAME"],
-               $http_vars["SERVER_SOFTWARE"],
+               "with HTTP;\r\n\t %s\r\n",
+               $this->get_server_var("REMOTE_ADDR"),
+               $this->get_server_var("SERVER_NAME"),
                $this->rfc_date());
 
         return $str;
+    }
+    
+    /**
+     * Returns the appropriate server variable.  Should work with both 
+     * PHP 4.1.0+ as well as older versions.  Returns an empty string 
+     * if nothing is found.
+     * @private
+     * @returns mixed
+     */
+    function get_server_var($varName) {
+        global $HTTP_SERVER_VARS;
+        global $HTTP_ENV_VARS;
+
+        if(!isset($_SERVER))
+        {
+            $_SERVER = $HTTP_SERVER_VARS;
+            if(!isset($_SERVER["REMOTE_ADDR"]))
+                $_SERVER = $HTTP_ENV_VARS; // must be Apache
+        }
+        
+        if(isset($_SERVER[$varName]))
+            return $_SERVER[$varName];
+        else
+            return "";
     }
 
     /**
