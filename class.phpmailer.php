@@ -131,7 +131,8 @@ class phpmailer
     var $Sendmail          = "/usr/sbin/sendmail";
 
     /**
-     *  Turns Microsoft mail client headers on and off. Default value is false (off).
+     *  Turns Microsoft mail client headers on and off.  Useful mostly
+     *  for older clients. Default value is false (off).
      *  @public
      *  @type bool
      */
@@ -151,9 +152,9 @@ class phpmailer
 
     /**
      *  Sets the SMTP hosts.  All hosts must be separated by a
-     *  semicolon.  You can also specify a different default port
+     *  semicolon.  You can also specify a different port
      *  for each host by using this format: [hostname:port]
-     *  (e.g. Host("smtp1.domain.com:25;smtp2.domain.com").
+     *  (e.g. "smtp1.domain.com:25;smtp2.domain.com").
      *  Hosts will be tried in order.
      *  Default value is "localhost".
      *  @public
@@ -169,7 +170,7 @@ class phpmailer
     var $Port        = 25;
 
     /**
-     *  Sets the CharSet of the message.
+     *  Sets the SMTP HELO of the message.
      *  Default value is "localhost.localdomain".
      *  @public
      *  @type string
@@ -177,7 +178,7 @@ class phpmailer
     var $Helo        = "localhost.localdomain";
 
     /**
-     *  Sets SMTP authentication. Remember to set the Username and Password.
+     *  Sets SMTP authentication. Utilizes the Username and Password variables.
      *  Default value is false (off).
      *  @public
      *  @type bool
@@ -345,7 +346,7 @@ class phpmailer
      * Adds a "Cc" address. Note: this function works
      * with the SMTP mailer on win32, not with the "mail"
      * mailer.  This is a PHP bug that has been submitted
-     * on the Zend web site. The UNIX version of PHP
+     * on http://bugs.php.net. The *NIX version of PHP
      * functions correctly. Returns void.
      * @public
      * @returns void
@@ -360,7 +361,7 @@ class phpmailer
      * Adds a "Bcc" address. Note: this function works
      * with the SMTP mailer on win32, not with the "mail"
      * mailer.  This is a PHP bug that has been submitted
-     * on the Zend web site. The UNIX version of PHP
+     * on http://bugs.php.net. The *NIX version of PHP
      * functions correctly.
      * Returns void.
      * @public
@@ -390,7 +391,8 @@ class phpmailer
 
     /**
      * Creates message and assigns Mailer. If the message is
-     * not sent successfully then it returns false.  Returns bool.
+     * not sent successfully then it returns false.  Use the ErrorInfo
+     * variable to view description of the error.  Returns bool.
      * @public
      * @returns bool
      */
@@ -859,7 +861,7 @@ class phpmailer
     /////////////////////////////////////////////////
 
     /**
-     * Adds an attachment from the OS filesystem.
+     * Adds an attachment from a path on the filesystem.
      * Checks if attachment is valid and then adds
      * the attachment to the list.
      * Returns false if the file could not be found
