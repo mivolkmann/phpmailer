@@ -498,14 +498,16 @@ class phpmailerTest extends TestCase
     }
     
     function test_Error() {
+        $this->Mail->Subject .= ": This should be sent"; 
         $this->BuildBody();
-        $this->Mail->Subject .= ": This should not be sent";
         $this->Mail->ClearAllRecipients(); // no addresses should cause an error
         $this->assert($this->Mail->IsError() == false, "Error found");
         $this->assert($this->Mail->Send() == false, "Send succeeded");
         $this->assert($this->Mail->IsError(), "No error found");
         $this->assertEquals('You must provide at least one ' .
                             'recipient email address.', $this->Mail->ErrorInfo);
+        $this->Mail->AddAddress(get("mail_to"));
+        $this->assert($this->Mail->Send(), "Send failed");
     }
 }  
  
