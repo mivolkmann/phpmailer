@@ -1,5 +1,5 @@
 <?php
-/////////////////////////////////////////////////
+////////////////////////////////////////////////////
 // phpmailer - PHP email class
 // 
 // Version 1.03, 05/24/2001
@@ -8,10 +8,10 @@
 // sendmail, PHP mail(), or SMTP.  Methods are
 // based upon the standard AspEmail(tm) classes.
 //
-// Author: Brent R. Matzelle
+// Author: Brent R. Matzelle <bmatzelle@yahoo.com>
 //
 // License: LGPL, see LICENSE
-/////////////////////////////////////////////////
+////////////////////////////////////////////////////
 
 class phpmailer
 {
@@ -42,7 +42,7 @@ class phpmailer
 	var $SMTPDebug   = false;
 	
 	// "Private" variables
-	var $Version       = "phpmailer [version 1.02]";
+	var $Version       = "phpmailer [version 1.03]";
 	var $to            = array();
 	var $cc            = array();
 	var $bcc           = array();
@@ -451,7 +451,7 @@ class phpmailer
 	}
 	
 	// Add all the Microsoft message headers
-	function AddMSMailHeaders() {
+	function UseMSMailHeaders() {
 	   $MSHeader = "";
 	   if($this->Priority == 1)
 	      $MSPriority = "High";

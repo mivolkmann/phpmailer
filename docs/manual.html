@@ -78,7 +78,7 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 
 <tr>
 <td class="greytab">int Priority</td>
-<td class="whitetab">Email priority (1 (High), 3 (Normal), 5 (low)</td>
+<td class="whitetab">Email priority (1 = High, 3 = Normal, 5 = low)</td>
 <td class="default">3</td>
 <td>
 </tr>
@@ -127,13 +127,13 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 
 <tr>
 <td class="greytab">string Sendmail</td>
-<td class="whitetab">Location of sendmail program</td>
+<td class="whitetab">Path to sendmail program</td>
 <td class="default">/usr/sbin/sendmail</td>
 </tr>
 
 <tr>
 <td class="greytab">int WordWrap</td>
-<td class="whitetab">Set word wrap on message body</td>
+<td class="whitetab">Wrap message body at X characters (e.g. 50)</td>
 <td class="default">false (off)</td>
 </tr>
 
@@ -204,56 +204,8 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 </tr>
 
 <tr>
-<td class="greytab2">IsHTML(bool)</td>
-<td class="whitetab2">Turn HTML format on/off</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">IsSMTP()</td>
-<td class="whitetab2">Set mailer to SMTP</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">IsMail()</td>
-<td class="whitetab2">Set mailer to PHP mail() function</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">IsSendmail()</td>
-<td class="whitetab2">Set mailer to $sendmail</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">IsQmail()</td>
-<td class="whitetab2">Set $sendmail to /var/qmail/bin/qmail-inject</td>
-<td>
-</tr>
-
-<tr>
 <td class="greytab2">AddAddress(string address, string name)</td>
 <td class="whitetab2">Add a <i>TO</i> address (name optional)</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">AddCC(string address, string name)</td>
-<td class="whitetab2">Add a <i>CC</i> address (name optional)</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">AddBCC(string address, string name)</td>
-<td class="whitetab2">Add a <i>BCC</i> address (name optional)</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">AddReplyTo(string address, string name)</td>
-<td class="whitetab2">Add a <i>Reply-To</i> address (name optional)</td>
 <td>
 </tr>
 
@@ -264,44 +216,32 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 </tr>
 
 <tr>
+<td class="greytab2">AddBCC(string address, string name)</td>
+<td class="whitetab2">Add a <i>BCC</i> address (name optional)</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">AddCC(string address, string name)</td>
+<td class="whitetab2">Add a <i>CC</i> address (name optional)</td>
+<td>
+</tr>
+
+<tr>
 <td class="greytab2">AddCustomHeader(string header)</td>
 <td class="whitetab2">Add a custom email header</td>
 <td>
 </tr>
 
 <tr>
-<td class="greytab2">Send()</td>
-<td class="whitetab2">Send the message</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">PrintVersion()</td>
-<td class="whitetab2">Print out the version number of phpmailer</td>
+<td class="greytab2">AddReplyTo(string address, string name)</td>
+<td class="whitetab2">Add a <i>Reply-To</i> address (name optional)</td>
 <td>
 </tr>
 
 <tr>
 <td class="greytab2">ClearAddresses()</td>
 <td class="whitetab2">Clears any recipients assigned in the <i>TO</i> array</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">ClearCCs()</td>
-<td class="whitetab2">Clears any recipients assigned in the <i>CC</i> array</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">ClearBCCs()</td>
-<td class="whitetab2">Clears any recipients assigned in the <i>BCC</i> array</td>
-<td>
-</tr>
-
-<tr>
-<td class="greytab2">ClearReplyTos()</td>
-<td class="whitetab2">Clears any recipients assigned in the <i>ReplyTo</i> array</td>
 <td>
 </tr>
 
@@ -318,8 +258,68 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 </tr>
 
 <tr>
+<td class="greytab2">ClearCCs()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>CC</i> array</td>
+<td>
+</tr>
+
+<tr>
 <td class="greytab2">ClearCustomHeaders()</td>
 <td class="whitetab2">Clears any recipients assigned in the <i>CustomHeader</i> array</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">ClearBCCs()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>BCC</i> array</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">ClearReplyTos()</td>
+<td class="whitetab2">Clears any recipients assigned in the <i>ReplyTo</i> array</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">IsMail()</td>
+<td class="whitetab2">Set mailer to PHP mail() function</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">IsHTML(bool)</td>
+<td class="whitetab2">Turn HTML format on/off</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">IsSendmail()</td>
+<td class="whitetab2">Set mailer to $sendmail</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">IsSMTP()</td>
+<td class="whitetab2">Set mailer to SMTP</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">IsQmail()</td>
+<td class="whitetab2">Set $sendmail to <i>/var/qmail/bin/sendmail</i></td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">PrintVersion()</td>
+<td class="whitetab2">Print out the version number of phpmailer</td>
+<td>
+</tr>
+
+<tr>
+<td class="greytab2">Send()</td>
+<td class="whitetab2">Send the message</td>
 <td>
 </tr>
 

@@ -53,28 +53,27 @@ require("class.phpmailer.php");
 
 $mail = new phpmailer;
 
-$mail->IsSMTP(); // set mailer to use SMTP
+$mail->IsSMTP();                                // set mailer to use SMTP
 $mail->From = "from@email.com";
 $mail->FromName = "Mailer";
 $mail->Host = "smtp1.site.com;smtp2.site.com";  // specify main and backup server
 $mail->AddAddress("josh@site.com", "Josh Adams");
-$mail->AddAddress("ellen@site.com");   // name is optional
+$mail->AddAddress("ellen@site.com");           // name is optional
 $mail->AddReplyTo("info@site.com", "Information");
-$mail->WordWrap = 50;    // set word wrap
+$mail->WordWrap = 50;                          // set word wrap to 50 characters
 $mail->AddAttachment("c:\\temp\\js-bak.sql");  // add attachments
 $mail->AddAttachment("c:/temp/11-10-00.zip");
 
-$mail->IsHTML(true);    // set email format to HTML
+$mail->IsHTML(true);                           // set email format to HTML
 $mail->Subject = "Here is the subject";
 $mail->Body = "This is the message body";
-$mail->Send(); // send message
+$mail->Send();                                 // send the message
 ?>
 
 CHANGELOG
 
 See ChangeLog.txt
 
-
-Download: http://phpmailer.sourceforge.net/phpmailer-0.92.tar.gz
+Download: http://sourceforge.net/project/showfiles.php?group_id=26031&release_id=35718
 
 Brent R. Matzelle <bmatzelle@yahoo.com>
