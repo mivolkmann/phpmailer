@@ -66,7 +66,7 @@ class mailerc extends phpmailer
         $msg_start = 0;
         for($i = 0; $i < count($qarray); $i++)
         {
-            if($qarray[$i] == "----END PQM HEADER----\n")
+            if($qarray[$i] == "----END PQM HEADER----\r\n")
             {
                 $msg_start = $i + 1;
                 break;
@@ -210,7 +210,9 @@ function send_message($filePath)
     // another message.  Then run the phpmailer send file.
     $mail = new mailerc();
     if(!$mail->SendFromFile($filePath))
-        printf("Error sending: %s\n", $mail->ErrorInfo);
+        printf("error: %s\n", $mail->ErrorInfo);
+    else
+        printf("success: sent\n");
 }
 
 /*

@@ -137,6 +137,15 @@ class phpmailer
      *  @type bool
      */
     var $UseMSMailHeaders = false;
+    
+    /**
+     * Path to phpmailer plugins.  This is now only useful if the SMTP class 
+     * is in a different directory than the PHP include path.  
+     * Default is empty ("").
+     * @public
+     * @type string
+     */
+    var $PluginDir         = "";
 
     /**
      *  Holds phpmailer version.
@@ -474,47 +483,47 @@ class phpmailer
 		srand((double)microtime() * 1000000);
 		$msg_id = rand();
         
-        $fp = fopen($queuePath . $msg_id . ".pqm", "w");
+        $fp = fopen($queuePath . $msg_id . ".pqm", "wb");
         if(!$fp)
         {
             $this->error_handler(sprintf("Could not write to %s directory", $queuePath));
             return false;
         }
        
-        $message[] = "----START PQM HEADER----\n";
-        $message[] = sprintf("SendDate: %s\n", time()); // This will later be a queue time
-        $message[] = sprintf("Mailer: %s\n", $this->Mailer);
+        $message[] = "----START PQM HEADER----\r\n";
+        $message[] = sprintf("SendDate: %s\r\n", time()); // This will later be a queue time
+        $message[] = sprintf("Mailer: %s\r\n", $this->Mailer);
 
         // Choose the mailer
         if($this->Mailer == "sendmail")
         {
-            $message[] = sprintf("Sendmail: %s\n", $this->Sendmail);
-            $message[] = sprintf("Sender: %s\n", $this->Sender);
+            $message[] = sprintf("Sendmail: %s\r\n", $this->Sendmail);
+            $message[] = sprintf("Sender: %s\r\n", $this->Sender);
         }
         elseif($this->Mailer == "mail")
         {
-            $message[] = sprintf("Sender: %s\n", $this->Sender);
-            $message[] = sprintf("Subject: %s\n", $this->Subject);
-            $message[] = sprintf("to: %s\n", $this->addr_list($this->to));
+            $message[] = sprintf("Sender: %s\r\n", $this->Sender);
+            $message[] = sprintf("Subject: %s\r\n", $this->Subject);
+            $message[] = sprintf("to: %s\r\n", $this->addr_list($this->to));
         }
         elseif($this->Mailer == "smtp")
         {
-            $message[] = sprintf("Host: %s\n", $this->Host);
-            $message[] = sprintf("Port: %d\n", $this->Port);
-            $message[] = sprintf("Helo: %s\n", $this->Helo);
+            $message[] = sprintf("Host: %s\r\n", $this->Host);
+            $message[] = sprintf("Port: %d\r\n", $this->Port);
+            $message[] = sprintf("Helo: %s\r\n", $this->Helo);
             
             if($this->SMTPAuth)
                 $auth_no = 1;
             else
                 $auth_no = 0;
-            $message[] = sprintf("SMTPAuth: %d\n", $auth_no);
-            $message[] = sprintf("Username: %s\n", $this->Username);
-            $message[] = sprintf("Password: %s\n", $this->Password);
-            $message[] = sprintf("From: %s\n", $this->From);
+            $message[] = sprintf("SMTPAuth: %d\r\n", $auth_no);
+            $message[] = sprintf("Username: %s\r\n", $this->Username);
+            $message[] = sprintf("Password: %s\r\n", $this->Password);
+            $message[] = sprintf("From: %s\r\n", $this->From);
 
-            $message[] = sprintf("to: %s\n", $this->addr_list($this->to));
-            $message[] = sprintf("cc: %s\n", $this->addr_list($this->cc));
-            $message[] = sprintf("bcc: %s\n", $this->addr_list($this->bcc));
+            $message[] = sprintf("to: %s\r\n", $this->addr_list($this->to));
+            $message[] = sprintf("cc: %s\r\n", $this->addr_list($this->cc));
+            $message[] = sprintf("bcc: %s\r\n", $this->addr_list($this->bcc));
         }
         else
         {
@@ -522,7 +531,7 @@ class phpmailer
             return false;
         }
 
-        $message[] = "----END PQM HEADER----\n"; // end of pqm header        
+        $message[] = "----END PQM HEADER----\r\n"; // end of pqm header        
         $message[] = $header;
         $message[] = $body;
        
@@ -606,7 +615,7 @@ class phpmailer
      */
     function smtp_send($header, $body) {
         // Include SMTP class code, but not twice
-        include_once("class.smtp.php"); // Load code only if asked
+        include_once($this->PluginDir . "class.smtp.php");
 
         $smtp = new SMTP;
 
