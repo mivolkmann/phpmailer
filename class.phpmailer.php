@@ -154,6 +154,13 @@ class phpmailer
      */
     var $Version           = "1.54";
 
+    /**
+     * Sets the email address that a reading confirmation will be sent. Default value is "".
+     * @public
+     * @type string
+     */
+    var $ConfirmReadingTo  = "";
+
 
     /////////////////////////////////////////////////
     // SMTP VARIABLES
@@ -914,6 +921,9 @@ class phpmailer
         $header[] = sprintf("X-Priority: %d\r\n", $this->Priority);
         $header[] = sprintf("X-Mailer: phpmailer [version %s]\r\n", $this->Version);
         $header[] = sprintf("Return-Path: %s\r\n", trim($this->From));
+        
+        if($this->ConfirmReadingTo != "")
+            $header[] = sprintf("Disposition-Notification-To: <%s>\r\n", trim($this->ConfirmReadingTo));
 
         // Add custom headers
         for($index = 0; $index < count($this->CustomHeader); $index++)
@@ -1039,6 +1049,8 @@ class phpmailer
         $this->attachment[$cur][3] = $encoding;
         $this->attachment[$cur][4] = $type;
         $this->attachment[$cur][5] = false; // isStringAttachment
+        $this->attachment[$cur][6] = "attachment";
+        $this->attachment[$cur][7] = 0;
 
         return true;
     }
@@ -1086,37 +1098,47 @@ class phpmailer
         // Add all attachments
         for($i = 0; $i < count($this->attachment); $i++)
         {
-          // Check for string attachment
-          $isString = $this->attachment[$i][5];
-          if ($isString)
-          {
-              $string = $this->attachment[$i][0];
-          }
-          else
-          {
-              $path = $this->attachment[$i][0];
-          }
-          $filename = $this->attachment[$i][1];
-          $name = $this->attachment[$i][2];
-          $encoding = $this->attachment[$i][3];
-          $type = $this->attachment[$i][4];
-          $mime[] = sprintf("--Boundary-=%s\r\n", $this->boundary);
-          $mime[] = sprintf("Content-Type: %s; ", $type);
-          $mime[] = sprintf("name=\"%s\"\r\n", $name);
-          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n", $encoding);
-          $mime[] = sprintf("Content-Disposition: attachment; filename=\"%s\"\r\n\r\n", $name);
+            // Check for string attachment
+            $isString = $this->attachment[$i][5];
+            if ($isString)
+            {
+                $string = $this->attachment[$i][0];
+            }
+            else
+            {
+                $path = $this->attachment[$i][0];
+            }
+            $filename = $this->attachment[$i][1];
+            $name = $this->attachment[$i][2];
+            $encoding = $this->attachment[$i][3];
+            $type = $this->attachment[$i][4];
+            $disposition = $this->attachment[$i][6];
+            $cid = $this->attachment[$i][7];
 
-          // Encode as string attachment
-          if($isString)
-          {
-              if(!$mime[] = sprintf("%s\r\n\r\n", $this->encode_string($string, $encoding)))
-                return false;
-          }
-          else
-          {
-              if(!$mime[] = sprintf("%s\r\n\r\n", $this->encode_file($path, $encoding)))
-                return false;
-          }
+            $mime[] = sprintf("--Boundary-=%s\r\n", $this->boundary);
+            $mime[] = sprintf("Content-Type: %s; ", $type);
+            $mime[] = sprintf("name=\"%s\"\r\n", $name);
+            $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n", $encoding);
+
+            if($disposition == "inline")
+                $mime[] = sprintf("Content-ID: <%s>\r\n", $cid);
+            else
+                $mime[] = sprintf("Content-ID: <%s>\r\n", $name);
+
+            $mime[] = sprintf("Content-Disposition: %s; filename=\"%s\"\r\n\r\n", 
+                              $disposition, $name);
+
+            // Encode as string attachment
+            if($isString)
+            {
+                if(!$mime[] = sprintf("%s\r\n\r\n", $this->encode_string($string, $encoding)))
+                  return false;
+            }
+            else
+            {
+                if(!$mime[] = sprintf("%s\r\n\r\n", $this->encode_file($path, $encoding)))
+                  return false;
+            }
         }
         $mime[] = sprintf("\r\n--Boundary-=%s--\r\n", $this->boundary);
 
@@ -1201,12 +1223,12 @@ class phpmailer
     }
 
     /**
-    * Adds a string or binary attachment (non-filesystem) to the list.
-    * This method can be used to attach ascii or binary data,
-    * such as a BLOB record from a database.
-    * @public
-    * @returns void
-    */
+     * Adds a string or binary attachment (non-filesystem) to the list.
+     * This method can be used to attach ascii or binary data,
+     * such as a BLOB record from a database.
+     * @public
+     * @returns void
+     */
     function AddStringAttachment($string, $filename, $encoding = "base64", $type = "application/octet-stream") {
         // Append to $attachment array
         $cur = count($this->attachment);
@@ -1216,6 +1238,42 @@ class phpmailer
         $this->attachment[$cur][3] = $encoding;
         $this->attachment[$cur][4] = $type;
         $this->attachment[$cur][5] = true; // isString
+        $this->attachment[$cur][6] = "attachment";
+        $this->attachment[$cur][7] = 0;
+    }
+    
+    /**
+     * Adds an embedded attachment.  This can include images, sounds, and 
+     * just about any other document.  
+     * @param cid this is the content id of the attachment.  Use this to identify
+     *        how to access teh attachment.
+     * @public
+     * @returns bool
+     */
+    function AddEmbeddedAttachment($path, $cid, $name = "", $encoding = "base64", $type = "application/octet-stream") {
+    
+        if(!@is_file($path))
+        {
+            $this->error_handler(sprintf("Could not access [%s] file", $path));
+            return false;
+        }
+
+        $filename = basename($path);
+        if($name == "")
+            $name = $filename;
+
+        // Append to $attachment array
+        $cur = count($this->attachment);
+        $this->attachment[$cur][0] = $path;
+        $this->attachment[$cur][1] = $filename;
+        $this->attachment[$cur][2] = $name;
+        $this->attachment[$cur][3] = $encoding;
+        $this->attachment[$cur][4] = $type;
+        $this->attachment[$cur][5] = false; // isStringAttachment
+        $this->attachment[$cur][6] = "inline";
+        $this->attachment[$cur][7] = $cid;
+    
+        return true;
     }
 
     /////////////////////////////////////////////////
