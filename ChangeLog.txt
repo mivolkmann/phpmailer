@@ -1,5 +1,10 @@
 ChangeLog
 
+Version 1.02 (Wed, May 23 2001)
+* Added multiple recipient and attachment Clear* methods
+* Added Sendmail public variable
+* Fixed problem with loading SMTP library multiple times
+
 Version 0.98 (Tue, May 22 2001)
 * Fixed problem with redundant mail hosts sending out multiple messages
 * Added additional error handler code
