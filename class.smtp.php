@@ -101,13 +101,15 @@
 
             # sometimes the SMTP server takes a little longer to respond
             # so we will give it a longer timeout for the first read
-            //socket_set_timeout($this->smtp_conn, 1, 0);
+            //if(function_exists("socket_set_timeout"))
+            //   socket_set_timeout($this->smtp_conn, 1, 0);
 
             # get any announcement stuff
             $announce = $this->get_lines();
 
             # set the timeout  of any socket functions at 1/10 of a second
-            //socket_set_timeout($this->smtp_conn, 0, 100000);
+            //if(function_exists("socket_set_timeout"))
+            //   socket_set_timeout($this->smtp_conn, 0, 100000);
 
             if($this->do_debug >= 2) {
                 echo "SMTP -> FROM SERVER:" . $this->CRLF . $announce;
