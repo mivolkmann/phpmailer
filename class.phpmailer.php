@@ -508,12 +508,22 @@ class phpmailer
 
    /**
     * wordwrap wraps message for use with mailers that don't
-    * automatically perform wrapping.  Written by philippe.  Returns string.
+    * automatically perform wrapping and for quoted-printable.
+    * Original written by philippe.  Returns string.
     * @private
     * @returns string
     */
-   function wordwrap($message, $length) {
-      $line = explode("\n", $message);
+   function wordwrap($message, $length, $qp_mode = false) {
+      if ($qp_mode)
+        $soft_break = " =\r\n";
+      else
+        $soft_break = "\r\n";
+
+      $message = $this->fix_eol($message);
+      if (substr($message, -1) == "\r\n")
+        $message = substr($message, 0, -2);
+
+      $line = explode("\r\n", $message);
       $message = "";
       for ($i=0 ;$i < count($line); $i++)
       {
@@ -521,15 +531,58 @@ class phpmailer
          $buf = "";
          for ($e = 0; $e<count($line_part); $e++)
          {
-            $buf_o = $buf;
-            if ($e == 0)
-               $buf .= $line_part[$e];
-            else
-               $buf .= " " . $line_part[$e];
-            if (strlen($buf) > $length and $buf_o != "")
+            $word = $line_part[$e];
+            if ($qp_mode and (strlen($word) > $length))
             {
-               $message .= $buf_o . "\r\n";
-               $buf = $line_part[$e];
+               $space_left = $length - strlen($buf) - 1;
+               if ($e != 0)
+               {
+                  if ($space_left > 20)
+                  {
+                     $len = $space_left;
+                     if (substr($word, $len - 1, 1) == "=")
+                        $len--;
+                     elseif (substr($word, $len - 2, 1) == "=")
+                        $len -= 2;
+                     $part = substr($word, 0, $len);
+                     $word = substr($word, $len);
+                     $buf .= " " . $part;
+                     $message .= $buf . "=\r\n";
+                  }
+                  else
+                  {
+                     $message .= $buf . $soft_break;
+                  }
+                  $buf = "";
+               }
+               while (strlen($word) > 0)
+               {
+                  $len = $length;
+                  if (substr($word, $len - 1, 1) == "=")
+                     $len--;
+                  elseif (substr($word, $len - 2, 1) == "=")
+                     $len -= 2;
+                  $part = substr($word, 0, $len);
+                  $word = substr($word, $len);
+
+                  if (strlen($word) > 0)
+                     $message .= $part . "=\r\n";
+                  else
+                     $buf = $part;
+               }
+            }
+            else
+            {
+               $buf_o = $buf;
+               if ($e == 0)
+                  $buf .= $word;
+               else
+                  $buf .= " " . $word;
+               if (strlen($buf) > $length and $buf_o != "")
+               {
+                  $message .= $buf_o . $soft_break;
+                  $buf = $word;
+               }
             }
          }
          $message .= $buf . "\r\n";
@@ -539,8 +592,8 @@ class phpmailer
    }
 
    /**
-    * create_header assembles message header.  Returns a string if sucessful
-    * or false if unsucessful.
+    * create_header assembles message header.  Returns a string if successful
+    * or false if unsuccessful.
     * @private
     * @returns string
     */
@@ -548,7 +601,7 @@ class phpmailer
       $header = array();
       $header[] = sprintf("Date: %s\r\n", date("r")); //D, j M Y H:i:s T"));
 
-      // To created automatically by mail()
+      // To be created automatically by mail()
       if($this->Mailer != "mail")
          $header[] = $this->addr_append("To", $this->to);
 
@@ -599,8 +652,8 @@ class phpmailer
    }
 
    /**
-    * create_body assembles the message body.  Returns a string if sucessful
-    * or false if unsucessful.
+    * create_body assembles the message body.  Returns a string if successful
+    * or false if unsuccessful.
     * @private
     * @returns string
     */
@@ -657,7 +710,7 @@ class phpmailer
 
    /**
     * attach_all attach text and binary attachments to body.  Returns a
-    * string if sucessful or false if unsucessful.
+    * string if successful or false if unsuccessful.
     * @private
     * @returns string
     */
@@ -695,7 +748,7 @@ class phpmailer
 
    /**
     * encode_file encode attachment in requested format.  Returns a
-    * string if sucessful or false if unsucessful.
+    * string if successful or false if unsuccessful.
     * @private
     * @returns string
     */
@@ -714,30 +767,58 @@ class phpmailer
 
    /**
     * encode_string encode string to requested format.  Returns a
-    * string if sucessful or false if unsucessful.
+    * string if successful or false if unsuccessful.
     * @private
     * @returns string
     */
    function encode_string ($str, $encoding = "base64") {
       switch(strtolower($encoding)) {
          case "base64":
-      // chunk_split is found in PHP >= 3.0.6
+            // chunk_split is found in PHP >= 3.0.6
             $encoded = chunk_split(base64_encode($str));
             break;
 
          case "7bit":
          case "8bit":
+            $encoded = $this->fix_eol($str);
+            if (substr($encoded, -2) != "\r\n")
+               $encoded .= "\r\n";
+            break;
+
          case "binary":
             $encoded = $str;
             break;
 
          case "quoted-printable":
-            // Not yet available
+            $encoded = $this->encode_qp($str);
+            break;
+
          default:
             $this->error_handler(sprintf("Unknown encoding: %s", $encoding));
             return false;
       }
       return($encoded);
+   }
+
+   /**
+    * encode_qp encode string to quoted-printable.  Returns a string.
+    * @private
+    * @returns string
+    */
+   function encode_qp ($str) {
+      $encoded = $this->fix_eol($str);
+      if (substr($encoded, -2) != "\r\n")
+         $encoded .= "\r\n";
+
+      // Replace every high ascii, control and = characters
+      $encoded = preg_replace("/([\001-\010\013\014\016-\037\075\177-\377])/e", "'='.sprintf('%02X', ord('\\1'))", $encoded);
+      // Replace every spaces and tabs when it's the last character on a line
+      $encoded = preg_replace("/([\011\040])\r\n/e", "'='.sprintf('%02X', ord('\\1')).'\r\n'", $encoded);
+
+      // Maximum line length of 76 characters before CRLF (74 + space + '=')
+      $encoded = $this->WordWrap($encoded, 74, true);
+
+      return $encoded;
    }
 
    /////////////////////////////////////////////////
@@ -827,6 +908,18 @@ class phpmailer
          print("Description:<br>");
          printf("<font color=\"FF0000\">%s</font><br>", $msg);
       }
+   }
+
+   /**
+    * fix_eol changes every end of line from CR or LF to CRLF.  Returns string.
+    * @private
+    * @returns string
+    */
+   function fix_eol($str) {
+      $str = str_replace("\r\n", "\n", $str);
+      $str = str_replace("\r", "\n", $str);
+      $str = str_replace("\n", "\r\n", $str);
+      return $str;
    }
 
    /**
