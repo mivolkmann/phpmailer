@@ -2,7 +2,7 @@
 /////////////////////////////////////////////////
 // phpmailer - PHP email class
 // 
-// Version 1.02, 05/23/2001
+// Version 1.03, 05/24/2001
 //
 // Class for sending email using either 
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -81,7 +81,9 @@ class phpmailer
 
 	// Sets $Sendmail to qmail MTA
 	function IsQmail() {
-		$this->Sendmail = "/var/qmail/bin/qmail-inject";
+		//$this->Sendmail = "/var/qmail/bin/qmail-inject";
+		$this->Sendmail = "/var/qmail/bin/sendmail";
+		$this->Mailer = "sendmail";
 	}
 
 

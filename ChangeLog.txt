@@ -1,5 +1,8 @@
 ChangeLog
 
+Version 1.03 (Thu, May 24 2001)
+* Fixed problem where qmail sends out duplicate messages
+
 Version 1.02 (Wed, May 23 2001)
 * Added multiple recipient and attachment Clear* methods
 * Added Sendmail public variable
