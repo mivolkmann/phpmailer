@@ -125,7 +125,7 @@ class PHPMailer
      *  Holds PHPMailer version.
      *  @var string
      */
-    var $Version           = "1.65";
+    var $Version           = "1.71";
 
     /**
      * Sets the email address that a reading confirmation will be sent.
@@ -436,7 +436,8 @@ class PHPMailer
         if ($this->Sender != "" && PHP_VERSION >= "4.0.5")
         {
             $params = sprintf("-oi -f %s", $this->Sender);
-            $rt = @mail($to, $this->EncodeHeader($this->Subject), $body, $header, $params);
+            $rt = @mail($to, $this->EncodeHeader($this->Subject), $body, 
+                        $header, $params);
         }
         else
             $rt = @mail($to, $this->EncodeHeader($this->Subject), $body, $header);
@@ -461,33 +462,12 @@ class PHPMailer
      * @return bool
      */
     function SmtpSend($header, $body) {
-        // Include SMTP class code, but not twice
         include_once($this->PluginDir . "class.smtp.php");
         $error = "";
         $bad_rcpt = array();
 
-        if($this->smtp == NULL)
-        {
-            if(!$this->SmtpConnect())
-                return false;
-        }
-
-        // Must perform HELO before authentication
-        if ($this->Helo != '')
-            $this->smtp->Hello($this->Helo);
-        else
-            $this->smtp->Hello($this->ServerHostname());
-
-        // If user requests SMTP authentication
-        if($this->SMTPAuth)
-        {
-            if(!$this->smtp->Authenticate($this->Username, $this->Password))
-            {
-                $this->SetError($this->Lang("authenticate"));
-                $this->smtp->Reset();
-                return false;
-            }
-        }
+        if(!$this->SmtpConnect())
+            return false;
 
         $smtp_from = ($this->Sender == "") ? $this->From : $this->Sender;
         if(!$this->smtp->Mail($smtp_from))
@@ -515,8 +495,7 @@ class PHPMailer
                 $bad_rcpt[] = $this->bcc[$i][0];
         }
 
-        // Create error message
-        if(count($bad_rcpt) > 0)
+        if(count($bad_rcpt) > 0) // Create error message
         {
             for($i = 0; $i < count($bad_rcpt); $i++)
             {
@@ -569,7 +548,24 @@ class PHPMailer
             }
 
             if($this->smtp->Connect($host, $port, $this->Timeout))
+            {
+                if ($this->Helo != '')
+                    $this->smtp->Hello($this->Helo);
+                else
+                    $this->smtp->Hello($this->ServerHostname());
+        
+                if($this->SMTPAuth)
+                {
+                    if(!$this->smtp->Authenticate($this->Username, 
+                                                  $this->Password))
+                    {
+                        $this->SetError($this->Lang("authenticate"));
+                        $this->smtp->Reset();
+                        $connection = false;
+                    }
+                }
                 $connection = true;
+            }
             $index++;
         }
         if(!$connection)
@@ -937,6 +933,7 @@ class PHPMailer
         $result .= $this->TextLine("--" . $boundary);
         $result .= sprintf("Content-Type: %s; charset = \"%s\"", 
                             $contentType, $charSet);
+        $result .= $this->LE;
         $result .= $this->HeaderLine("Content-Transfer-Encoding", $encoding);
         $result .= $this->LE;
        
