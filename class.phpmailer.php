@@ -290,7 +290,11 @@ class phpmailer
    }
 
    /**
-    * Adds a "Cc" address. Returns void.
+    * Adds a "Cc" address. Note: this function works
+    * with the SMTP mailer on win32, not with the "mail"
+    * mailer.  This is a PHP bug that has been submitted
+    * on the Zend web site. The UNIX version of PHP
+    * functions correctly. Returns void.
     * @public
     * @returns void
     */
@@ -301,11 +305,11 @@ class phpmailer
    }
 
    /**
-    * Adds a "Bcc" address. Note: this function works 
-    * with the SMTP mailer on win32, not with the "mail" 
-    * mailer.  This is a PHP bug that has been submitted 
-    * on the Zend web site. The UNIX version of PHP 
-    * functions correctly. 
+    * Adds a "Bcc" address. Note: this function works
+    * with the SMTP mailer on win32, not with the "mail"
+    * mailer.  This is a PHP bug that has been submitted
+    * on the Zend web site. The UNIX version of PHP
+    * functions correctly.
     * Returns void.
     * @public
     * @returns void
@@ -333,7 +337,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * Creates message and assigns Mailer. If the message is 
+    * Creates message and assigns Mailer. If the message is
     * not sent successfully then it returns false.  Returns bool.
     * @public
     * @returns bool
@@ -349,6 +353,8 @@ class phpmailer
       if(!$body = $this->create_body())
          return false;
 
+      //echo "<pre>".$header . $body . "</pre>"; // debugging
+      
       // Choose the mailer
       if($this->Mailer == "sendmail")
       {
@@ -441,7 +447,7 @@ class phpmailer
    }
 
    /**
-    * Sends mail via SMTP using PhpSMTP (Author:
+    * Sends mail via SMTP using PhpSMTP (Author: 
     * Chris Ryan).  Returns bool.
     * @private
     * @returns bool
@@ -647,22 +653,22 @@ class phpmailer
       if($this->UseMSMailHeaders)
          $header[] = $this->AddMSMailHeaders();
 
+      $header[] = "MIME-Version: 1.0\r\n";
+
       // Add all attachments
       if(count($this->attachment) > 0)
       {
          // Set message boundary
          $this->boundary = "_b" . md5(uniqid(time()));
 
-         $header[] = sprintf("Content-Type: Multipart/Mixed; charset = \"%s\";\r\n", $this->CharSet);
-         $header[] = sprintf(" boundary=\"Boundary-=%s\"\r\n", $this->boundary);
+         $header[] = sprintf("Content-Type: Multipart/Mixed;\r\n", $this->CharSet);
+         $header[] = sprintf(" boundary=\"Boundary-=%s\"\r\n\r\n", $this->boundary);
       }
       else
       {
          $header[] = sprintf("Content-Transfer-Encoding: %s\r\n", $this->Encoding);
-         $header[] = sprintf("Content-Type: %s; charset = \"%s\";\r\n", $this->ContentType, $this->CharSet);
+         $header[] = sprintf("Content-Type: %s; charset = \"%s\"\r\n\r\n", $this->ContentType, $this->CharSet);
       }
-
-      $header[] = "MIME-Version: 1.0\r\n";
 
       return(join("", $header));
    }
@@ -697,8 +703,8 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * Checks if attachment is valid and then adds 
-    * the attachment to the list. 
+    * Checks if attachment is valid and then adds
+    * the attachment to the list.
     * Returns false if the file was not found.
     * @public
     * @returns bool
@@ -751,7 +757,7 @@ class phpmailer
          $encoding = $this->attachment[$i][3];
          $type = $this->attachment[$i][4];
          $mime[] = sprintf("--Boundary-=%s\r\n", $this->boundary);
-         $mime[] = sprintf("Content-Type: %s;\r\n", $type);
+         $mime[] = sprintf("Content-Type: %s; ", $type);
          $mime[] = sprintf("name=\"%s\"\r\n", $name);
          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n", $encoding);
          $mime[] = sprintf("Content-Disposition: attachment; filename=\"%s\"\r\n\r\n", $name);
@@ -770,7 +776,7 @@ class phpmailer
     * @returns string
     */
    function encode_file ($path, $encoding = "base64") {
-      if(!@$fd = fopen($path, "r"))
+      if(!@$fd = fopen($path, "rb"))
       {
          $this->error_handler(sprintf("File Error: Could not open file %s", $path));
          return false;
@@ -922,7 +928,7 @@ class phpmailer
    function error_handler($msg) {
         $this->ErrorInfo = $msg;
    }
-   
+
    /**
     * Returns the proper RFC 822 formatted date. Returns string.
     * @private
