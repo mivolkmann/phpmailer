@@ -1130,11 +1130,11 @@ class PHPMailer
       
       switch (strtolower($position)) {
         case 'phrase':
-          if (preg_match_all('/[\200-\377]/', $str, $matches) == 0) {
+          if (!preg_match('/[\200-\377]/', $str)) {
             // Can't use addslashes as we don't know what value has magic_quotes_sybase.
             $encoded = addcslashes($str, "\0..\37\177\\\"");
 
-            if (($str == $encoded) && (preg_match_all('/[^A-Za-z0-9!#$%&\'*+\/=?^_`{|}~ -]/', $str, $matches) == 0))
+            if (($str == $encoded) && !preg_match('/[^A-Za-z0-9!#$%&\'*+\/=?^_`{|}~ -]/', $str))
               return ($encoded);
             else
               return ("\"$encoded\"");
