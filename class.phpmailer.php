@@ -60,7 +60,7 @@ class phpmailer
    var $ErrorInfo        = "";
 
    /**
-    * Sets the From email of the message. Default value is "root@localhost".
+    * Sets the From email address for the message. Default value is "root@localhost".
     * @public
     * @type string
     */
@@ -89,17 +89,19 @@ class phpmailer
    var $Subject          = "";
 
    /**
-    * Sets the Body of the message. Default value is "".
+    * Sets the Body of the message.  This can be either an HTML or text body.
+    * If HTML then run IsHTML(true). Default value is "".
     * @public
     * @type string
     */
    var $Body             = "";
 
    /**
-    * Sets a multipart/alternative message.  This is an 
-    * alternative, text (non-HTML) body.  Useful for mail 
-    * clients that do not have HTML email 
-    * capability.  Default value is "".
+    * Sets the text-only body of the message.  This automatically sets the
+    * email to multipart/alternative.  This body can be read by mail
+    * clients that do not have HTML email capability such as mutt. Clients
+    * that can read HTML will view the normal Body.
+    * Default value is "".
     * @public
     * @type string
     */
@@ -148,7 +150,10 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    *  Sets the SMTP host. Default value is "localhost".
+    *  Sets the SMTP hosts.  All hosts must be separated by a
+    *  semicolon (e.g. Host("smtp1.domain.com;smtp2.domain.com").
+    *  Hosts will be tried in order.
+    *  Default value is "localhost".
     *  @public
     *  @type string
     */
@@ -169,7 +174,8 @@ class phpmailer
    var $Helo        = "localhost.localdomain";
 
    /**
-    *  Sets SMTP authentication. Default value is false (off).
+    *  Sets SMTP authentication. Remember to set the Username and Password.
+    *  Default value is false (off).
     *  @public
     *  @type bool
     */
@@ -190,11 +196,12 @@ class phpmailer
    var $Password    = "";
 
    /**
-    *  Sets the SMTP server timeout. Default value is 10.
+    *  Sets the SMTP server timeout in seconds. Does not function at this time
+    *  because PHP for win32 does not support it. Default value is 10.
     *  @public
     *  @type int
     */
-   var $Timeout     = 10; // Socket timeout in sec.
+   var $Timeout     = 10;
 
    /**
     *  Sets SMTP class debugging on or off. Default value is false (off).
@@ -233,7 +240,7 @@ class phpmailer
    var $ReplyTo       = array();
 
    /**
-    *  Holds all attachments.
+    *  Holds all string and binary attachments.
     *  @type array
     */
    var $attachment    = array();
@@ -274,7 +281,8 @@ class phpmailer
    }
 
    /**
-    * Sets Mailer to use SMTP.  Returns void.
+    * Sets Mailer to send message using SMTP.
+    * Returns void.
     * @public
     * @returns void
     */
@@ -283,7 +291,8 @@ class phpmailer
    }
 
    /**
-    * Sets Mailer to use PHP mail() function.  Returns void.
+    * Sets Mailer to send message using PHP mail() function.
+    * Returns void.
     * @public
     * @returns void
     */
@@ -292,7 +301,8 @@ class phpmailer
    }
 
    /**
-    * Sets Mailer to use $Sendmail program.  Returns void.
+    * Sets Mailer to send message using the $Sendmail program.
+    * Returns void.
     * @public
     * @returns void
     */
@@ -301,7 +311,7 @@ class phpmailer
    }
 
    /**
-    * Sets Mailer to use qmail MTA.  Returns void.
+    * Sets Mailer to send message using the qmail MTA.  Returns void.
     * @public
     * @returns void
     */
@@ -317,7 +327,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * Adds a "to" address.  Returns void.
+    * Adds a "To" address.  Returns void.
     * @public
     * @returns void
     */
@@ -546,7 +556,7 @@ class phpmailer
       for($i = 0; $i < count($this->bcc); $i++)
          $smtp->Recipient(sprintf("<%s>", $this->bcc[$i][0]));
 
-      if(!$smtp->Data(sprintf("%s%s", $header, $body)))
+      if(!$smtp->Data(sprintf("%s%s", trim($header), trim($body))))
       {
          $this->error_handler("SMTP Error: Data not accepted");
          return false;
@@ -584,7 +594,7 @@ class phpmailer
    }
 
    /**
-    * Wraps message for use with mailers that don't
+    * Wraps message for use with mailers that do not
     * automatically perform wrapping and for quoted-printable.
     * Original written by philippe.  Returns string.
     * @private
@@ -795,6 +805,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
+    * Adds an attachment from the OS filesystem.
     * Checks if attachment is valid and then adds
     * the attachment to the list.
     * Returns false if the file was not found.
@@ -825,8 +836,8 @@ class phpmailer
    }
 
    /**
-    * Attaches text and binary attachments to body.  Returns a
-    * string if successful or false if unsuccessful.
+    * Attaches all fs, string, and binary attachments to the message.
+    * Returns a string if successful or false if unsuccessful.
     * @private
     * @returns string
     */
@@ -980,19 +991,13 @@ class phpmailer
    }
 
    /**
-   * Adds the string attachment to the list. This method can be used
-   * to attach ascii data.  It can also attach binary data, such as
-   * a BLOB record from a database. Returns false if missing filename.
+   * Adds a string or binary attachment (non-filesystem) to the list.
+   * This method can be used to attach ascii or binary data,
+   * such as a BLOB record from a database.
    * @public
-   * @returns bool
+   * @returns void
    */
    function AddStringAttachment($string, $filename, $encoding = "binary", $type = "application/octet-stream") {
-      if(empty($filename))
-      {
-          $this->error_handler("Please provide a file name for attachment");
-          return false;
-      }
-
       // Append to $attachment array
       $cur = count($this->attachment);
       $this->attachment[$cur][0] = $string;
@@ -1001,8 +1006,6 @@ class phpmailer
       $this->attachment[$cur][3] = $encoding;
       $this->attachment[$cur][4] = $type;
       $this->attachment[$cur][5] = true; // isString
-
-      return true;
    }
 
    /////////////////////////////////////////////////
@@ -1058,7 +1061,8 @@ class phpmailer
    }
 
    /**
-    * Clears all previously set attachments.  Returns void.
+    * Clears all previously set filesystem, string, and binary
+    * attachments.  Returns void.
     * @public
     * @returns void
     */
