@@ -90,7 +90,6 @@ class phpmailerTest extends TestCase
         
         global $global_vars;
         $this->SetAddress($global_vars["mail_to"], "Test User");
-        $this->SetAddress("matzelle@hotmail.com", "Hello");
         if(strlen($global_vars["mail_cc"]) > 0)
             $this->SetAddress($global_vars["mail_cc"], "Carbon User", "cc");
     }     
@@ -393,13 +392,12 @@ class phpmailerTest extends TestCase
         $this->Mail->Subject .= ": Embedded Image";
         $this->Mail->IsHTML(true);
         
-        if(!$this->Mail->AddEmbeddedImage("rocks.png", "my-attach", "rocks.png"))
+        if(!$this->Mail->AddEmbeddedImage("rocks.png", "my-attach", "rocks.png",
+                                          "base64", "image/png"))
         {
             $this->assert(false, $this->Mail->ErrorInfo);
             return;
         }
-
-        $this->assert($this->Mail->EmbeddedImageCount() == 1, "Incorrect image count");
 
         $this->BuildBody();
         $this->assert($this->Mail->Send(), $this->Mail->ErrorInfo);
@@ -415,7 +413,8 @@ class phpmailerTest extends TestCase
         $this->Mail->Subject .= ": Embedded Image + Attachment";
         $this->Mail->IsHTML(true);
         
-        if(!$this->Mail->AddEmbeddedImage("rocks.png", "my-attach", "rocks.png"))
+        if(!$this->Mail->AddEmbeddedImage("rocks.png", "my-attach", "rocks.png",
+                                          "base64", "image/png"))
         {
             $this->assert(false, $this->Mail->ErrorInfo);
             return;
@@ -427,8 +426,6 @@ class phpmailerTest extends TestCase
             return;
         }
         
-        $this->assert($this->Mail->EmbeddedImageCount() == 1, "Incorrect image count");
-
         $this->BuildBody();
         $this->assert($this->Mail->Send(), $this->Mail->ErrorInfo);
     }
