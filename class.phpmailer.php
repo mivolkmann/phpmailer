@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 // 
-// Version 1.03, 05/24/2001
+// Version 1.06, 06/01/2001
 //
 // Class for sending email using either 
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -42,7 +42,7 @@ class phpmailer
 	var $SMTPDebug   = false;
 	
 	// "Private" variables
-	var $Version       = "phpmailer [version 1.05]";
+	var $Version       = "phpmailer [version 1.06]";
 	var $to            = array();
 	var $cc            = array();
 	var $bcc           = array();
@@ -158,12 +158,12 @@ class phpmailer
 	function mail_send($header, $body) {
 		// Create mail recipient list
 		$to = $this->to[0][0]; // no extra comma
-		for($x = 1; $x < count($this->to); $x++)
-			$to .= sprintf(",%s", $this->to[$x][0]);
-		for($x = 0; $x < count($this->cc); $x++)
-			$to .= sprintf(",%s", $this->cc[$x][0]);
-		for($x = 0; $x < count($this->bcc); $x++)
-			$to .= sprintf(",%s", $this->bcc[$x][0]);
+		for($i = 1; $i < count($this->to); $i++)
+			$to .= sprintf(",%s", $this->to[$i][0]);
+		for($i = 0; $i < count($this->cc); $i++)
+			$to .= sprintf(",%s", $this->cc[$i][0]);
+		for($i = 0; $i < count($this->bcc); $i++)
+			$to .= sprintf(",%s", $this->bcc[$i][0]);
 		
 		if(!@mail($to, $this->Subject, $body, $header))
 			$this->error_handler("Could not instantiate mail()");
@@ -197,12 +197,12 @@ class phpmailer
 		$smtp->Hello($this->Helo);
 		$smtp->Mail(sprintf("<%s>", $this->From));
 		
-		for($x = 0; $x < count($this->to); $x++)
-			$smtp->Recipient(sprintf("<%s>", $this->to[$x][0]));
-		for($x = 0; $x < count($this->cc); $x++)
-			$smtp->Recipient(sprintf("<%s>", $this->cc[$x][0]));
-		for($x = 0; $x < count($this->bcc); $x++)
-			$smtp->Recipient(sprintf("<%s>", $this->bcc[$x][0]));
+		for($i = 0; $i < count($this->to); $i++)
+			$smtp->Recipient(sprintf("<%s>", $this->to[$i][0]));
+		for($i = 0; $i < count($this->cc); $i++)
+			$smtp->Recipient(sprintf("<%s>", $this->cc[$i][0]));
+		for($i = 0; $i < count($this->bcc); $i++)
+			$smtp->Recipient(sprintf("<%s>", $this->bcc[$i][0]));
 
 		$smtp->Data(sprintf("%s%s", $header, $body));
 		$smtp->Quit();		
@@ -219,9 +219,9 @@ class phpmailer
 		$addr_str .= sprintf("%s: %s <%s>", $type, $addr[0][1], $addr[0][0]);
 		if(count($addr) > 1)
 		{
-			for($x = 1; $x < count($addr); $x++)
+			for($i = 1; $i < count($addr); $i++)
 			{
-				$addr_str .= sprintf(", %s <%s>", $addr[$x][1], $addr[$x][0]);
+				$addr_str .= sprintf(", %s <%s>", $addr[$i][1], $addr[$i][0]);
 			}
 			$addr_str .= "\n";
 		}
@@ -317,10 +317,13 @@ class phpmailer
 	/////////////////////////////////////////////////
 
 	// Check if attachment is valid and add to list
-	function AddAttachment($path) {
+	function AddAttachment($path, $name = "") {
 		if(!@is_file($path))
 			$this->error_handler(sprintf("Could not find %s file on filesystem", $path));
+		
 		$filename = basename($path);
+		if($name == "")
+		   $name = $filename;
 		
 		// Set message boundary
 		$this->boundary = "_b" . md5(uniqid(time()));
@@ -329,6 +332,7 @@ class phpmailer
 		$cur = count($this->attachment);
 		$this->attachment[$cur][0] = $path;
 		$this->attachment[$cur][1] = $filename;
+		$this->attachment[$cur][2] = $name;
 	}
 
 	// Attach text and binary attachments to body
@@ -341,15 +345,16 @@ class phpmailer
 		$mime[] = sprintf("%s\n", $this->Body);
 		
 		// Add all attachments
-		for($x = 0; $x < count($this->attachment); $x++)
+		for($i = 0; $i < count($this->attachment); $i++)
 		{
-			$path = $this->attachment[$x][0];
-			$filename = $this->attachment[$x][1];
+			$path = $this->attachment[$i][0];
+			$filename = $this->attachment[$i][1];
+			$name = $this->attachment[$i][2];
 			$mime[] = sprintf("--Boundary-=%s\n", $this->boundary);
 			$mime[] = "Content-Type: application/octet-stream;\n";
-			$mime[] = sprintf("name=\"%s\"\n", $filename);
+			$mime[] = sprintf("name=\"%s\"\n", $name);
 			$mime[] = "Content-Transfer-Encoding: base64\n";
-			$mime[] = sprintf("Content-Disposition: attachment; filename=\"%s\"\n\n", $filename);
+			$mime[] = sprintf("Content-Disposition: attachment; filename=\"%s\"\n\n", $name);
 			$mime[] = sprintf("%s\n\n", $this->encode_file($path));
 		}
 		$mime[] = sprintf("\n--Boundary-=%s--\n", $this->boundary);

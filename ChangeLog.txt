@@ -1,5 +1,8 @@
 ChangeLog
 
+Version 1.06 (Fri, Jun 01 2001)
+* Added optional name for file attachments
+
 Version 1.05 (Tue, May 29 2001)
 * Code cleanup
 * Eliminated sendmail header warning message
