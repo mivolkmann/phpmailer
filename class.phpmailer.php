@@ -456,7 +456,7 @@ class phpmailer
         $header = "";
         $body = "";
 
-        if(count($this->to) < 1)
+        if((count($this->to) + count($this->cc) + count($this->bcc)) < 1)
         {
             $this->error_handler("You must provide at least one recipient email address");
             return false;
