@@ -1,6 +1,6 @@
 <?php
 ////////////////////////////////////////////////////
-// PhpMailer - PHP email class
+// PHPMailer - PHP email class
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -10,10 +10,10 @@
 ////////////////////////////////////////////////////
 
 /**
- * PhpMailer - PHP email transport class
+ * PHPMailer - PHP email transport class
  * @author Brent R. Matzelle
  */
-class PhpMailer
+class PHPMailer
 {
     /////////////////////////////////////////////////
     // PUBLIC VARIABLES
@@ -111,14 +111,14 @@ class PhpMailer
     var $Sendmail          = "/usr/sbin/sendmail";
     
     /**
-     * Path to phpmailer plugins.  This is now only useful if the SMTP class 
+     * Path to PHPMailer plugins.  This is now only useful if the SMTP class 
      * is in a different directory than the PHP include path.  
      * @var string
      */
     var $PluginDir         = "";
 
     /**
-     *  Holds phpmailer version.
+     *  Holds PHPMailer version.
      *  @var string
      */
     var $Version           = "1.65";
@@ -395,7 +395,7 @@ class PhpMailer
         // Attach sender information & date
         $header = $this->received();
         $header .= sprintf("Date: %s%s", $this->rfc_date(), $this->LE);
-        $header .= $this->create_header();
+        $header .= $this->CreateHeader();
 
         if(!$body = $this->CreateBody())
             return false;
@@ -764,7 +764,7 @@ class PhpMailer
      * @access private
      * @return string
      */
-    function create_header() {
+    function CreateHeader() {
         $header = array();
         
         // Set the boundaries
@@ -802,7 +802,7 @@ class PhpMailer
 
         $header[] = sprintf("Message-ID: <%s@%s>%s", $uniq_id, $this->ServerHostname(), $this->LE);
         $header[] = sprintf("X-Priority: %d%s", $this->Priority, $this->LE);
-        $header[] = sprintf("X-Mailer: PhpMailer [version %s]%s", $this->Version, $this->LE);
+        $header[] = sprintf("X-Mailer: PHPMailer [version %s]%s", $this->Version, $this->LE);
         if($this->Sender == "")
             $header[] = sprintf("Return-Path: %s%s", trim($this->From), $this->LE);
         else
@@ -888,37 +888,23 @@ class PhpMailer
         switch($this->message_type)
         {
             case "alt":
-                // Return text of body
-                $bndry = new Boundary($this->boundary[1]);
-                $bndry->CharSet = $this->CharSet;
-                $bndry->Encoding = $this->Encoding;
-                $body[] = $bndry->GetSource();
-    
+                $body[] = $this->GetBoundary($this->boundary[1], "", 
+                                             "text/plain", "");
                 $body[] = $this->encode_string($this->AltBody, $this->Encoding);
                 $body[] = $this->LE.$this->LE;
-    
-                $bndry = new Boundary($this->boundary[1]);
-                $bndry->CharSet = $this->CharSet;
-                $bndry->ContentType = "text/html";
-                $bndry->Encoding = $this->Encoding;
-                $body[] = $bndry->GetSource();
+                $body[] = $this->GetBoundary($this->boundary[1], "", 
+                                             "text/html", "");
                 
                 $body[] = $this->encode_string($this->Body, $this->Encoding);
                 $body[] = $this->LE.$this->LE;
     
-                // End the boundary
-                $body[] = sprintf("%s--%s--%s", $this->LE, 
-                                  $this->boundary[1], $this->LE.$this->LE);
+                $body[] = $this->EndBoundary($this->boundary[1]);
                 break;
             case "plain":
                 $body[] = $this->encode_string($this->Body, $this->Encoding);
                 break;
             case "attachments":
-                $bndry = new Boundary($this->boundary[1]);
-                $bndry->CharSet = $this->CharSet;
-                $bndry->ContentType = $this->ContentType;
-                $bndry->Encoding = $this->Encoding;
-                $body[] = $bndry->GetSource(false) . $this->LE;
+                $body[] = $this->GetBoundary($this->boundary[1], "", "", "");
                 $body[] = $this->encode_string($this->Body, $this->Encoding);
                 $body[] = $this->LE;
      
@@ -933,27 +919,20 @@ class PhpMailer
                                    $this->boundary[2], $this->LE.$this->LE);
     
                 // Create text body
-                $bndry = new Boundary($this->boundary[2]);
-                $bndry->CharSet = $this->CharSet;
-                $bndry->ContentType = "text/plain";
-                $bndry->Encoding = $this->Encoding;
-                $body[] = $bndry->GetSource() . $this->LE;
-    
+                $body[] = $this->GetBoundary($this->boundary[2], "", 
+                                             "text/plain", "") . $this->LE;
+
                 $body[] = $this->encode_string($this->AltBody, $this->Encoding);
                 $body[] = $this->LE.$this->LE;
     
                 // Create the HTML body
-                $bndry = new Boundary($this->boundary[2]);
-                $bndry->CharSet = $this->CharSet;
-                $bndry->ContentType = "text/html";
-                $bndry->Encoding = $this->Encoding;
-                $body[] = $bndry->GetSource() . $this->LE;
+                $body[] = $this->GetBoundary($this->boundary[2], "", 
+                                             "text/html", "") . $this->LE;
     
                 $body[] = $this->encode_string($this->Body, $this->Encoding);
                 $body[] = $this->LE.$this->LE;
 
-                $body[] = sprintf("%s--%s--%s", $this->LE, 
-                                  $this->boundary[2], $this->LE.$this->LE);
+                $body[] = $this->EndBoundary($this->boundary[2]);
                 
                 if(!$body[] = $this->AttachAll())
                     return false;
@@ -963,6 +942,32 @@ class PhpMailer
         return join("", $body);
     }
 
+    /**
+     * Returns the start of a message boundary.
+     * @access private
+     */
+    function GetBoundary($boundary, $charSet, $contentType, $encoding) {
+        $result = array();
+        if($charSet == "") { $charSet = $this->CharSet; }
+        if($contentType == "") { $contentType = $this->ContentType; }
+        if($encoding == "") { $encoding = $this->Encoding; }
+
+        $result[] = "--" . $boundary;
+        $result[] = sprintf("Content-Type: %s; charset = \"%s\"", 
+                            $contentType, $charSet);
+        $result[] = "Content-Transfer-Encoding: " . $encoding;
+        $result[] = $this->LE;
+       
+        return join($this->LE, $result);
+    }
+    
+    /**
+     * Returns the end of a message boundary.
+     * @access private
+     */
+    function EndBoundary($boundary) {
+        return $this->LE . "--" . $boundary . "--" . $this->LE; 
+    }
 
     /////////////////////////////////////////////////
     // ATTACHMENT METHODS
@@ -1406,7 +1411,7 @@ class PhpMailer
         }
 
         $result = sprintf("Received: from %s %s\tby %s " .
-                          "with %s (PhpMailer);%s\t%s%s", $remote, $this->LE,
+                          "with %s (PHPMailer);%s\t%s%s", $remote, $this->LE,
                           $this->ServerHostname(), $protocol, $this->LE,
                           $this->rfc_date(), $this->LE);
 
@@ -1471,89 +1476,6 @@ class PhpMailer
      */
     function AddCustomHeader($custom_header) {
         $this->CustomHeader[] = explode(":", $custom_header, 2);
-    }
-}
-
-
-/**
- * Boundary - MIME message boundary class
- * @author Brent R. Matzelle
- */
-class Boundary
-{
-    /**
-     * Sets the boundary ID.
-     * @access private
-     * @var string
-     */
-    var $ID = 0;
-
-    /**
-     * Sets the boundary Content Type.
-     * @var string
-     */
-    var $ContentType = "text/plain";
-
-    /**
-     * Sets the Encoding.
-     * @var string
-     */
-    var $Encoding = "";
-
-    /**
-     * Sets an attachment disposition.
-     * @var string
-     */
-    var $Disposition = "";
-
-    /**
-     * Sets an attachment file name.
-     * @var string
-     */
-    var $FileName = "";
-    
-    /**
-     * Sets the Char set.
-     * @var string
-     */
-    var $CharSet = "";
-    
-    /**
-     *  Sets the line endings of the message.  Default is "\n";
-     *  @var string
-     */
-    var $LE           = "\n";
-    
-    /**
-     * Main constructor.
-     */
-    function Boundary($boundary_id) {
-        $this->ID = $boundary_id;
-    }
-    
-    /**
-     * Returns the source of the boundary.
-     * @return string
-     */
-    function GetSource($bLineEnding = true) {
-        $mime = array();
-        $mime[] = sprintf("--%s%s", $this->ID, $this->LE);
-        $mime[] = sprintf("Content-Type: %s; charset = \"%s\"%s", 
-                          $this->ContentType, $this->CharSet, $this->LE);
-        $mime[] = sprintf("Content-Transfer-Encoding: %s%s", $this->Encoding, 
-                          $this->LE);
-        
-        if(strlen($this->Disposition) > 0)
-        {
-            $mime[] = sprintf("Content-Disposition: %s;");
-            if(strlen($this->FileName) > 0)
-                $mime[] = sprinf("filename=\"%s\"", $this->FileName);
-        }
-        
-        if($bLineEnding)
-            $mime[] = $this->LE;
-
-        return join("", $mime);
     }
 }
 
