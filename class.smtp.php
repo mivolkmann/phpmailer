@@ -101,6 +101,7 @@
 
             # sometimes the SMTP server takes a little longer to respond
             # so we will give it a longer timeout for the first read
+            // Commented b/c of win32 warning messages
             //if(function_exists("socket_set_timeout"))
             //   socket_set_timeout($this->smtp_conn, 1, 0);
 
@@ -113,6 +114,70 @@
 
             if($this->do_debug >= 2) {
                 echo "SMTP -> FROM SERVER:" . $this->CRLF . $announce;
+            }
+
+            return true;
+        }
+
+        /*
+         * Authenticate()
+         *
+         * Performs SMTP authentication.  Must be run after running the
+         * Hello() method.  Returns true if successfully authenticated.
+         */
+        function Authenticate($username, $password) {
+            // Start authentication
+            fputs($this->smtp_conn,"AUTH LOGIN" . $this->CRLF);
+
+            $rply = $this->get_lines();
+            $code = substr($rply,0,3);
+
+            if($code != 334) {
+                $this->error =
+                    array("error" => "AUTH not accepted from server",
+                          "smtp_code" => $code,
+                          "smtp_msg" => substr($rply,4));
+                if($this->do_debug >= 1) {
+                    echo "SMTP -> ERROR: " . $this->error["error"] .
+                             ": " . $rply . $this->CRLF;
+                }
+                return false;
+            }
+
+            // Send encoded username
+            fputs($this->smtp_conn, base64_encode($username) . $this->CRLF);
+
+            $rply = $this->get_lines();
+            $code = substr($rply,0,3);
+
+            if($code != 334) {
+                $this->error =
+                    array("error" => "Username not accepted from server",
+                          "smtp_code" => $code,
+                          "smtp_msg" => substr($rply,4));
+                if($this->do_debug >= 1) {
+                    echo "SMTP -> ERROR: " . $this->error["error"] .
+                             ": " . $rply . $this->CRLF;
+                }
+                return false;
+            }
+
+            // Send encoded password
+            fputs($this->smtp_conn, base64_encode($password) . $this->CRLF);
+
+            $rply = $this->get_lines();
+            $code = substr($rply,0,3);
+
+            if($code != 235) {
+                $this->error =
+                    array("error" => "Password not accepted from server",
+                          "smtp_code" => $code,
+                          "smtp_msg" => substr($rply,4));
+                if($this->do_debug >= 1) {
+                    echo "SMTP -> ERROR: " . $this->error["error"] .
+                             ": " . $rply . $this->CRLF;
+                }
+                return false;
             }
 
             return true;
@@ -137,7 +202,7 @@
                     return false;
                 }
                 return true; # everything looks good
-            } 
+            }
             return false;
         }
 
@@ -151,7 +216,7 @@
         function Close() {
             $this->error = null; # so there is no confusion
             $this->helo_rply = null;
-            if(!empty($this->smtp_conn)) { 
+            if(!empty($this->smtp_conn)) {
                 # close the connection and cleanup
                 fclose($this->smtp_conn);
                 $this->smtp_conn = 0;
@@ -386,7 +451,7 @@
             $code = substr($rply,0,3);
 
             if($this->do_debug >= 2) {
-                echo "SMTP -> FROM SERVER:" . $this->CRLF . $rply;
+                echo "SMTP -> FROM SERVER: " . $this->CRLF . $rply;
             }
 
             if($code != 250) {

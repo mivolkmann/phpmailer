@@ -1,16 +1,20 @@
 ChangeLog
 
-Version 1.28 (Mon, July 30 2001)
+Version 1.29 (Fri, Aug 03 2001)
+* Added AddStringAttachment() method
+* Added SMTP authentication support
+
+Version 1.28 (Mon, Jul 30 2001)
 * Fixed a typo in SMTP class
 * Fixed header issue with Imail (win32) SMTP server
 * Made fopen() calls for attachments use "rb" to fix win32 error
 
-Version 1.25 (Mon, July 02 2001)
+Version 1.25 (Mon, Jul 02 2001)
 * Added RFC 822 date fix (Patrice)
 * Added improved error handling by adding a $ErrorInfo variable
 * Removed MailerDebug variable (obsolete with new error handler)
 
-Version 1.20 (Mon, June 25 2001)
+Version 1.20 (Mon, Jun 25 2001)
 * Added quoted-printable encoding (Patrice)
 * Set Version as public and removed PrintVersion()
 * Changed phpdoc to only display public variables and methods
