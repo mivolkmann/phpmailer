@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.41, Created 08/12/2001
+// Version 1.45, Created 08/12/2001
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -142,7 +142,7 @@ class phpmailer
      *  @public
      *  @type string
      */
-    var $Version           = "1.41";
+    var $Version           = "1.45";
 
 
     /////////////////////////////////////////////////
@@ -151,7 +151,9 @@ class phpmailer
 
     /**
      *  Sets the SMTP hosts.  All hosts must be separated by a
-     *  semicolon (e.g. Host("smtp1.domain.com;smtp2.domain.com").
+     *  semicolon.  You can also specify a different default port 
+     *  for each host by using this format: [hostname:port] 
+     *  (e.g. Host("smtp1.domain.com:25;smtp2.domain.com").
      *  Hosts will be tried in order.
      *  Default value is "localhost".
      *  @public
@@ -160,7 +162,7 @@ class phpmailer
     var $Host        = "localhost";
 
     /**
-     *  Sets the SMTP server port. Default value is 25.
+     *  Sets the default SMTP server port. Default value is 25.
      *  @public
      *  @type int
      */
@@ -440,9 +442,9 @@ class phpmailer
      */
     function sendmail_send($header, $body) {
         if ($this->Sender != "")
-            $sendmail = sprintf("%s -f %s -t", $this->Sendmail, $this->Sender);
+            $sendmail = sprintf("%s -oi -f %s -t", $this->Sendmail, $this->Sender);
         else
-            $sendmail = sprintf("%s -t", $this->Sendmail);
+            $sendmail = sprintf("%s -oi -t", $this->Sendmail);
 
         if(!@$mail = popen($sendmail, "w"))
         {
@@ -479,7 +481,7 @@ class phpmailer
         if ($this->Sender != "" && PHP_VERSION >= "4.0.5")
         {
             // The fifth parameter to mail is only available in PHP >= 4.0.5
-            $params = sprintf("-f %s", $this->Sender);
+            $params = sprintf("-oi -f %s", $this->Sender);
             $rt = @mail($to, $this->Subject, $body, $header, $params);
         }
         else
@@ -501,7 +503,8 @@ class phpmailer
 
     /**
      * Sends mail via SMTP using PhpSMTP (Author:
-     * Chris Ryan).  Returns bool.
+     * Chris Ryan).  Returns bool.  Returns false if there is a 
+     * bad MAIL FROM, RCPT, or DATA input. 
      * @private
      * @returns bool
      */
@@ -517,11 +520,19 @@ class phpmailer
         $hosts = explode(";", $this->Host);
         $index = 0;
         $connection = false;
+        $smtp_from = "";
+        $bad_rcpt = array();
+        $e = "";
 
         // Retry while there is no connection
         while($index < count($hosts) && $connection == false)
         {
-            if($smtp->Connect($hosts[$index], $this->Port, $this->Timeout))
+            list($host, $port) = explode(":", $hosts[$index]);
+            if ($port === NULL)
+                $port = $this->Port;
+            
+            //if($smtp->Connect($hosts[$index], $this->Port, $this->Timeout))
+            if($smtp->Connect($host, $port, $this->Timeout))
                 $connection = true;
             //printf("%s host could not connect<br>", $hosts[$index]); //debug only
             $index++;
@@ -552,17 +563,43 @@ class phpmailer
 
         if(!$smtp->Mail(sprintf("<%s>", $smtp_from)))
         {
-            $e = sprintf("From address: %s not accepted", $smtp_from);
+            $e = sprintf("SMTP Error: From address [%s] failed", $smtp_from);
             $this->error_handler($e);
             return false;
         }
 
+        // Attempt to send attach all recipients
         for($i = 0; $i < count($this->to); $i++)
-            $smtp->Recipient(sprintf("<%s>", $this->to[$i][0]));
+        {
+            if(!$smtp->Recipient(sprintf("<%s>", $this->to[$i][0])))
+                $bad_rcpt[] = $this->to[$i][0];
+        }
         for($i = 0; $i < count($this->cc); $i++)
-            $smtp->Recipient(sprintf("<%s>", $this->cc[$i][0]));
+        {
+            if(!$smtp->Recipient(sprintf("<%s>", $this->cc[$i][0])))
+                $bad_rcpt[] = $this->cc[$i][0];
+        }
         for($i = 0; $i < count($this->bcc); $i++)
-            $smtp->Recipient(sprintf("<%s>", $this->bcc[$i][0]));
+        {
+            if(!$smtp->Recipient(sprintf("<%s>", $this->bcc[$i][0])))
+                $bad_rcpt[] = $this->bcc[$i][0];
+        }
+        
+        // Create error message
+        if(count($bad_rcpt) > 0)
+        {
+            for($i = 0; $i < count($bad_rcpt); $i++)
+            {
+                if($i != 0)
+                    $e .= ", ";
+                $e .= $bad_rcpt[$i];
+            }
+            $e = sprintf("SMTP Error: The following recipients failed [%s]", $e);
+            $this->error_handler($e);
+
+            return false;
+        }
+            
 
         if(!$smtp->Data(sprintf("%s%s", $header, $body)))
         {
@@ -817,14 +854,15 @@ class phpmailer
      * Adds an attachment from the OS filesystem.
      * Checks if attachment is valid and then adds
      * the attachment to the list.
-     * Returns false if the file was not found.
+     * Returns false if the file could not be found 
+     * or accessed.
      * @public
      * @returns bool
      */
     function AddAttachment($path, $name = "", $encoding = "base64", $type = "application/octet-stream") {
         if(!@is_file($path))
         {
-            $this->error_handler(sprintf("Could not find %s file on filesystem", $path));
+            $this->error_handler(sprintf("Could not access [%s] file", $path));
             return false;
         }
 

@@ -1,9 +1,12 @@
 ChangeLog
 
-Version 1.43 (Tue, Sep 25 2001)
+Version 1.45 (Tue, Sep 25 2001)
+* Added enhanced SMTP debug support
+* Added support for multiple ports on SMTP
 * Fixed AddStringAttachment encoding
 * Fixed possible header name quote bug
 * Fixed wordwrap() trim bug
+* Couple other small bug fixes
 
 Version 1.41 (Wed, Aug 22 2001)
 * Fixed AltBody bug w/o attachments
