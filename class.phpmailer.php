@@ -965,7 +965,7 @@ class phpmailer
 
         $header[] = sprintf("X-Priority: %d%s", $this->Priority, $this->LE);
         $header[] = sprintf("X-Mailer: phpmailer [version %s]%s", $this->Version, $this->LE);
-	if($this->Sender == "")
+        if($this->Sender == "")
             $header[] = sprintf("Return-Path: %s%s", trim($this->From), $this->LE);
         else
             $header[] = sprintf("Return-Path: %s%s", trim($this->Sender), $this->LE);
@@ -1001,7 +1001,7 @@ class phpmailer
             case "plain":
                 $header[] = sprintf("Content-Transfer-Encoding: %s%s", 
                                     $this->Encoding, $this->LE);
-                $header[] = sprintf("Content-Type: %s; charset = \"%s\"",
+                $header[] = sprintf("Content-Type: %s; charset=\"%s\"",
                                     $this->ContentType, $this->CharSet);
                 break;
             case "attachments":
