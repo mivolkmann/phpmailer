@@ -1,4 +1,4 @@
-phpmailer - PHP email class
+PHPMailer - PHP email class
 ==============================
 http://phpmailer.sourceforge.net
 
@@ -12,6 +12,7 @@ Class Features:
 - Support for 8bit, base64, binary, and quoted-printable encoding
 - Uses the same methods as the very popular AspEmail active server (COM) component
 - SMTP authentication
+- Native language support
 - Word wrap
 - Many more...
 
@@ -37,13 +38,16 @@ Installation:
 
 Copy class.phpmailer.php into your php.ini include_path. If you are
 using the SMTP mailer then place class.smtp.php in your path as well.
+Take the appropriate translation file from the language directory.  
+You can tell by the name ("phpmailer-lang-en.php" for English).  Place 
+it in the path of class.phpmailer.php and rename it phpmailer.lang.php.
 
 Example
 
 <?php
 require("class.phpmailer.php");
 
-$mail = new phpmailer();
+$mail = new PHPMailer();
 
 $mail->IsSMTP();                                      // set mailer to use SMTP
 $mail->Host = "smtp1.example.com;smtp2.example.com";  // specify main and backup server
