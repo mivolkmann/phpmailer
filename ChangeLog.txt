@@ -1,5 +1,12 @@
 ChangeLog
 
+Version 1.19 (Thu, Jun 21 2001)
+* Fixed MS Mail header bug
+* Added fix for Bcc problem with mail(). *Does not work on Win32*
+  (See PHP bug report: http://www.php.net/bugs.php?id=11616)
+* Set header date as the proper RFC 822 format
+* mail no longer passes a fifth parameter when not needed
+
 Version 1.15 (Fri, Jun 15 2001)
 [Note: these changes contributed by Patrice Fournier]
 * Changed all remaining \n to \r\n

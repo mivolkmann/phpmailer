@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.15, Created 06/15/2001
+// Version 1.19, Created 06/22/2001
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -173,7 +173,7 @@ class phpmailer
     *  Holds phpmailer version.
     *  @type string
     */
-   var $Version       = "phpmailer [version 1.15]";
+   var $Version       = "phpmailer [version 1.19]";
 
    /**
     *  Holds all "To" addresses.
@@ -396,21 +396,26 @@ class phpmailer
     * @returns bool
     */
    function mail_send($header, $body) {
-      // Create mail recipient list
+      //$to = substr($this->addr_append("To", $this->to), 4, -2);
+
+      // Cannot add Bcc's to the $to
       $to = $this->to[0][0]; // no extra comma
       for($i = 1; $i < count($this->to); $i++)
          $to .= sprintf(",%s", $this->to[$i][0]);
-      for($i = 0; $i < count($this->cc); $i++)
-         $to .= sprintf(",%s", $this->cc[$i][0]);
-      for($i = 0; $i < count($this->bcc); $i++)
-         $to .= sprintf(",%s", $this->bcc[$i][0]);
 
       if ($this->Sender != "")
+      {
+         // The fifth parameter to mail is only available in PHP >= 4.0.5
          $params = sprintf("-f %s", $this->Sender);
+         $rt = @mail($to, $this->Subject, $body, $header, $params);
+      }
       else
-         $params = "";
+      {
+         //echo $this->to[0][0];
+         $rt = @mail($to, $this->Subject, $body, $header);
+      }
 
-      if(!@mail($to, $this->Subject, $body, $header, $params))
+      if(!$rt)
       {
          $this->error_handler("Could not instantiate mail()");
          return false;
@@ -541,16 +546,27 @@ class phpmailer
     */
    function create_header() {
       $header = array();
-      $header[] = sprintf("Date: %s\r\n", date("D, j M Y H:i:s T"));
-      $header[] = $this->addr_append("To", $this->to);
+      $header[] = sprintf("Date: %s\r\n", date("r")); //D, j M Y H:i:s T"));
+
+      // To created automatically by mail()
+      if($this->Mailer != "mail")
+         $header[] = $this->addr_append("To", $this->to);
+
       $header[] = sprintf("From: %s <%s>\r\n", $this->FromName, trim($this->From));
       if(count($this->cc) > 0)
          $header[] = $this->addr_append("Cc", $this->cc);
-      if(($this->Mailer == "sendmail") && (count($this->bcc) > 0))
+
+      // sendmail and mail() extract Bcc from the header before sending
+      if((($this->Mailer == "sendmail") || ($this->Mailer == "mail")) && (count($this->bcc) > 0))
          $header[] = $this->addr_append("Bcc", $this->bcc);
+
       if(count($this->ReplyTo) > 0)
          $header[] = $this->addr_append("Reply-to", $this->ReplyTo);
-      $header[] = sprintf("Subject: %s\r\n", trim($this->Subject));
+
+      // mail() sets the subject itself
+      if($this->Mailer != "mail")
+         $header[] = sprintf("Subject: %s\r\n", trim($this->Subject));
+
       $header[] = sprintf("X-Priority: %d\r\n", $this->Priority);
       $header[] = sprintf("X-Mailer: %s\r\n", $this->Version);
       $header[] = sprintf("Return-Path: %s\r\n", trim($this->From));
@@ -686,7 +702,7 @@ class phpmailer
    function encode_file ($path, $encoding = "base64") {
       if(!@$fd = fopen($path, "r"))
       {
-         $this->error_handler("File Error: Could not open file %s", $path);
+         $this->error_handler(sprintf("File Error: Could not open file %s", $path));
          return false;
       }
       $file = fread($fd, filesize($path));
@@ -718,7 +734,7 @@ class phpmailer
          case "quoted-printable":
             // Not yet available
          default:
-            $this->error_handler("Unknown encoding: %s", $encoding);
+            $this->error_handler(sprintf("Unknown encoding: %s", $encoding));
             return false;
       }
       return($encoded);
@@ -809,7 +825,7 @@ class phpmailer
       {
          print("<h3>Mailer Error</h3>");
          print("Description:<br>");
-         printf("<font color=\"FF0000\">%s</font>", $msg);
+         printf("<font color=\"FF0000\">%s</font><br>", $msg);
       }
    }
 
@@ -823,11 +839,11 @@ class phpmailer
    }
 
    /**
-    * UseMSMailHeaders adds all the Microsoft message headers.  Returns string.
+    * AddMSMailHeaders adds all the Microsoft message headers.  Returns string.
     * @public
     * @returns string
     */
-   function UseMSMailHeaders() {
+   function AddMSMailHeaders() {
       $MSHeader = "";
       if($this->Priority == 1)
          $MSPriority = "High";
