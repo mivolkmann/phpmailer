@@ -1,5 +1,10 @@
 ChangeLog
 
+Version 1.47 (Tue, Oct 16 2001)
+* Fixed Received header code format
+* Fixed AltBody order error
+* Fixed alternate port warning
+
 Version 1.45 (Tue, Sep 25 2001)
 * Added enhanced SMTP debug support
 * Added support for multiple ports on SMTP

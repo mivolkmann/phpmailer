@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.45, Created 10/09/2001
+// Version 1.47, Created 10/16/2001
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -142,7 +142,7 @@ class phpmailer
      *  @public
      *  @type string
      */
-    var $Version           = "1.45";
+    var $Version           = "1.47";
 
 
     /////////////////////////////////////////////////
@@ -527,11 +527,14 @@ class phpmailer
         // Retry while there is no connection
         while($index < count($hosts) && $connection == false)
         {
-            list($host, $port) = explode(":", $hosts[$index]);
-            if ($port === NULL)
+            if(strstr($hosts[$index], ":"))
+                list($host, $port) = explode(":", $hosts[$index]);
+            else
+            {
+                $host = $hosts[$index];
                 $port = $this->Port;
+            }
 
-            //if($smtp->Connect($hosts[$index], $this->Port, $this->Timeout))
             if($smtp->Connect($host, $port, $this->Timeout))
                 $connection = true;
             //printf("%s host could not connect<br>", $hosts[$index]); //debug only
@@ -774,8 +777,8 @@ class phpmailer
             // Set message subboundary for multipart/alternative
             $this->subboundary = "_sb" . md5(uniqid(time()));
 
-            $header[] = "Content-Type: Multipart/Mixed;\r\n";
-            $header[] = sprintf(" boundary=\"Boundary-=%s\"\r\n\r\n", $this->boundary);
+            $header[] = "Content-Type: Multipart/Mixed;\r";
+            $header[] = sprintf("\tboundary=\"Boundary-=%s\"\r\n\r\n", $this->boundary);
         }
         else
         {
@@ -809,19 +812,19 @@ class phpmailer
             $mime[] = sprintf("--Boundary-=%s\r\n", $this->boundary);
 
             // Insert body. If multipart/alternative, insert both html and plain
-            $mime[] = sprintf("Content-Type: %s; charset = \"%s\"; boundary = \"Boundary-=%s\";\r\n",
+            $mime[] = sprintf("Content-Type: %s; charset = \"%s\";\r\tboundary = \"Boundary-=%s\";\r\n",
                               $this->ContentType, $this->CharSet, $this->subboundary);
             $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-
-            $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
-            $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
-            $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-            $mime[] = sprintf("%s\r\n\r\n", $this->Body);
 
             $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
             $mime[] = sprintf("Content-Type: text/plain; charset = \"%s\";\r\n", $this->CharSet);
             $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
             $mime[] = sprintf("%s\r\n\r\n", $this->AltBody);
+
+            $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
+            $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
+            $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
+            $mime[] = sprintf("%s\r\n\r\n", $this->Body);
 
             $mime[] = sprintf("\r\n--Boundary-=%s--\r\n\r\n", $this->subboundary);
 
@@ -900,19 +903,19 @@ class phpmailer
         // Insert body. If multipart/alternative, insert both html and plain.
         if (!empty($this->AltBody))
         {
-            $mime[] = sprintf("Content-Type: %s; charset = \"%s\"; boundary = \"Boundary-=%s\";\r\n",
+            $mime[] = sprintf("Content-Type: %s; charset = \"%s\";\r\tboundary = \"Boundary-=%s\";\r\n",
                                $this->ContentType, $this->CharSet, $this->subboundary);
             $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-
-            $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
-            $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
-            $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-            $mime[] = sprintf("%s\r\n\r\n", $this->Body);
 
             $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
             $mime[] = sprintf("Content-Type: text/plain; charset = \"%s\";\r\n", $this->CharSet);
             $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
             $mime[] = sprintf("%s\r\n\r\n", $this->AltBody);
+
+            $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
+            $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
+            $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
+            $mime[] = sprintf("%s\r\n\r\n", $this->Body);
 
             $mime[] = sprintf("\r\n--Boundary-=%s--\r\n\r\n", $this->subboundary);
         }
@@ -1173,9 +1176,9 @@ class phpmailer
         else
             $http_vars = $HTTP_SERVER_VARS; // IIS found
 
-        $str = sprintf("Received: from web browser (%s [%s]) by %s\r\n" .
-               "with HTTP (%s); %s\r\n",
-               $http_vars["HTTP_USER_AGENT"],
+        $str = sprintf("Received: from phpmailer %s ([%s]) by %s " .
+               "with HTTP (%s);\r\t %s\r\n",
+               $this->Version,
                $http_vars["REMOTE_ADDR"],
                $http_vars["SERVER_NAME"],
                $http_vars["SERVER_SOFTWARE"],
