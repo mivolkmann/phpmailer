@@ -134,12 +134,6 @@ class PHPMailer
     var $ConfirmReadingTo  = "";
 
     /**
-     *  Sets the line endings of the message.
-     *  @var string
-     */
-    var $LE           = "\n";
-
-    /**
      *  Sets the hostname to use in Message-Id and Received headers
      *  and as default HELO string. If empty, the value returned
      *  by SERVER_NAME is used or 'localhost.localdomain'.
@@ -227,6 +221,7 @@ class PHPMailer
     var $boundary        = array();
     var $language        = array();
     var $error_count     = 0;
+    var $LE              = "\n";
     /**#@-*/
     
     /////////////////////////////////////////////////
@@ -298,9 +293,7 @@ class PHPMailer
     /**
      * Adds a "Cc" address. Note: this function works
      * with the SMTP mailer on win32, not with the "mail"
-     * mailer.  This is a PHP bug that has been submitted
-     * on http://bugs.php.net. The *NIX version of PHP
-     * functions correctly. 
+     * mailer.  
      * @param string $address
      * @param string $name
      * @return void
@@ -314,9 +307,7 @@ class PHPMailer
     /**
      * Adds a "Bcc" address. Note: this function works
      * with the SMTP mailer on win32, not with the "mail"
-     * mailer.  This is a PHP bug that has been submitted
-     * on http://bugs.php.net. The *NIX version of PHP
-     * functions correctly.
+     * mailer.  
      * @param string $address
      * @param string $name
      * @return void
@@ -364,12 +355,10 @@ class PHPMailer
         if(!empty($this->AltBody))
             $this->ContentType = "multipart/alternative";
 
-        // Attach sender information & date
-        $header = $this->Received();
-        $header .= sprintf("Date: %s%s", $this->RFCDate(), $this->LE);
+        $this->SetMessageType();
         $header .= $this->CreateHeader();
-
         $body = $this->CreateBody();
+
         if($body == "") { return false; }
 
         // Choose the mailer
@@ -501,7 +490,7 @@ class PHPMailer
         }
 
         $smtp_from = ($this->Sender == "") ? $this->From : $this->Sender;
-        if(!$this->smtp->Mail(sprintf("<%s>", $smtp_from)))
+        if(!$this->smtp->Mail($smtp_from))
         {
             $error = $this->Lang("from_failed") . $smtp_from;
             $this->SetError($error);
@@ -512,17 +501,17 @@ class PHPMailer
         // Attempt to send attach all recipients
         for($i = 0; $i < count($this->to); $i++)
         {
-            if(!$this->smtp->Recipient(sprintf("<%s>", $this->to[$i][0])))
+            if(!$this->smtp->Recipient($this->to[$i][0]))
                 $bad_rcpt[] = $this->to[$i][0];
         }
         for($i = 0; $i < count($this->cc); $i++)
         {
-            if(!$this->smtp->Recipient(sprintf("<%s>", $this->cc[$i][0])))
+            if(!$this->smtp->Recipient($this->cc[$i][0]))
                 $bad_rcpt[] = $this->cc[$i][0];
         }
         for($i = 0; $i < count($this->bcc); $i++)
         {
-            if(!$this->smtp->Recipient(sprintf("<%s>", $this->bcc[$i][0])))
+            if(!$this->smtp->Recipient($this->bcc[$i][0]))
                 $bad_rcpt[] = $this->bcc[$i][0];
         }
 
@@ -540,7 +529,7 @@ class PHPMailer
             return false;
         }
 
-        if(!$this->smtp->Data(sprintf("%s%s", $header, $body)))
+        if(!$this->smtp->Data($header . $body))
         {
             $this->SetError($this->Lang("data_not_accepted"));
             $this->smtp->Reset();
@@ -566,7 +555,7 @@ class PHPMailer
         $this->smtp->do_debug = $this->SMTPDebug;
         $hosts = explode(";", $this->Host);
         $index = 0;
-        $connection = ($this->smtp->Connected()) ? true : false; 
+        $connection = ($this->smtp->Connected()); 
 
         // Retry while there is no connection
         while($index < count($hosts) && $connection == false)
@@ -758,6 +747,7 @@ class PHPMailer
         switch($this->message_type)
         {
            case "alt":
+              // fall through
            case "alt_attachment":
               $this->AltBody = $this->WrapText($this->AltBody, $this->WordWrap);
               break;
@@ -773,67 +763,200 @@ class PHPMailer
      * @return string
      */
     function CreateHeader() {
-        $header = array();
+        $result = "";
         
         // Set the boundaries
         $uniq_id = md5(uniqid(time()));
         $this->boundary[1] = "b1_" . $uniq_id;
         $this->boundary[2] = "b2_" . $uniq_id;
 
+        $result .= $this->Received();
+        $result .= $this->HeaderLine("Date", $this->RFCDate());
         if($this->Sender == "")
-            $header[] = sprintf("Return-Path: %s%s", trim($this->From), $this->LE);
+            $result .= $this->HeaderLine("Return-Path", trim($this->From));
         else
-            $header[] = sprintf("Return-Path: %s%s", trim($this->Sender), $this->LE);
+            $result .= $this->HeaderLine("Return-Path", trim($this->Sender));
         
         // To be created automatically by mail()
         if($this->Mailer != "mail")
         {
             if(count($this->to) > 0)
-                $header[] = $this->AddrAppend("To", $this->to);
+                $result .= $this->AddrAppend("To", $this->to);
             else if (count($this->cc) == 0)
-                $header[] = "To: undisclosed-recipients:;".$this->LE;
+                $result .= $this->HeaderLine("To", "undisclosed-recipients:;");
         }
 
         $from = array();
         $from[0][0] = trim($this->From);
         $from[0][1] = $this->FromName;
-        $header[] = $this->AddrAppend("From", $from); 
+        $result .= $this->AddrAppend("From", $from); 
 
         if(count($this->cc) > 0)
-            $header[] = $this->AddrAppend("Cc", $this->cc);
+            $result .= $this->AddrAppend("Cc", $this->cc);
 
         // sendmail and mail() extract Bcc from the header before sending
         if((($this->Mailer == "sendmail") || ($this->Mailer == "mail")) && (count($this->bcc) > 0))
-            $header[] = $this->AddrAppend("Bcc", $this->bcc);
+            $result .= $this->AddrAppend("Bcc", $this->bcc);
 
         if(count($this->ReplyTo) > 0)
-            $header[] = $this->AddrAppend("Reply-to", $this->ReplyTo);
+            $result .= $this->AddrAppend("Reply-to", $this->ReplyTo);
 
         // mail() sets the subject itself
         if($this->Mailer != "mail")
-            $header[] = sprintf("Subject: %s%s", $this->EncodeHeader(trim($this->Subject)), $this->LE);
+            $result .= $this->HeaderLine("Subject", $this->EncodeHeader(trim($this->Subject)));
 
-        $header[] = sprintf("Message-ID: <%s@%s>%s", $uniq_id, $this->ServerHostname(), $this->LE);
-        $header[] = sprintf("X-Priority: %d%s", $this->Priority, $this->LE);
-        $header[] = sprintf("X-Mailer: PHPMailer [version %s]%s", $this->Version, $this->LE);
+        $result .= sprintf("Message-ID: <%s@%s>%s", $uniq_id, $this->ServerHostname(), $this->LE);
+        $result .= $this->HeaderLine("X-Priority", $this->Priority);
+        $result .= $this->HeaderLine("X-Mailer", "PHPMailer [version " . $this->Version . "]");
         
         if($this->ConfirmReadingTo != "")
         {
-            $header[] = sprintf("Disposition-Notification-To: <%s>%s", 
-                            trim($this->ConfirmReadingTo), $this->LE);
+            $result .= $this->HeaderLine("Disposition-Notification-To", 
+                       "<" . trim($this->ConfirmReadingTo) . ">");
         }
 
         // Add custom headers
         for($index = 0; $index < count($this->CustomHeader); $index++)
         {
-            $header[] = sprintf("%s: %s%s", trim($this->CustomHeader[$index][0]), 
-                        $this->EncodeHeader(trim($this->CustomHeader[$index][1])), 
-                        $this->LE);
+            $result .= $this->HeaderLine(trim($this->CustomHeader[$index][0]), 
+                       $this->EncodeHeader(trim($this->CustomHeader[$index][1])));
+        }
+        $result .= $this->HeaderLine("MIME-Version", "1.0");
+
+        switch($this->message_type)
+        {
+            case "plain":
+                $result .= $this->HeaderLine("Content-Transfer-Encoding", $this->Encoding);
+                $result .= sprintf("Content-Type: %s; charset=\"%s\"",
+                                    $this->ContentType, $this->CharSet);
+                break;
+            case "attachments":
+                // fall through
+            case "alt_attachments":
+                if($this->EmbeddedImageCount() > 0)
+                {
+                    $result .= sprintf("Content-Type: %s;%s\ttype=\"text/html\";%s\tboundary=\"%s\"%s", 
+                                    "multipart/related", $this->LE, $this->LE, 
+                                    $this->boundary[1], $this->LE);
+                }
+                else
+                {
+                    $result .= $this->HeaderLine("Content-Type", "multipart/mixed;");
+                    $result .= $this->TextLine("\tboundary=\"" . $this->boundary[1] . '"');
+                }
+                break;
+            case "alt":
+                $result .= $this->HeaderLine("Content-Type", "multipart/alternative;");
+                $result .= $this->TextLine("\tboundary=\"" . $this->boundary[1] . '"');
+                break;
         }
 
-        $header[] = sprintf("MIME-Version: 1.0%s", $this->LE);
+        if($this->Mailer != "mail")
+            $result .= $this->LE.$this->LE;
 
-        // Determine what type of message this is        
+        return $result;
+    }
+
+    /**
+     * Assembles the message body.  Returns an empty string on failure.
+     * @access private
+     * @return string
+     */
+    function CreateBody() {
+        $result = "";
+
+        $this->SetWordWrap();
+
+        switch($this->message_type)
+        {
+            case "alt":
+                $result .= $this->GetBoundary($this->boundary[1], "", 
+                                              "text/plain", "");
+                $result .= $this->EncodeString($this->AltBody, $this->Encoding);
+                $result .= $this->LE.$this->LE;
+                $result .= $this->GetBoundary($this->boundary[1], "", 
+                                              "text/html", "");
+                
+                $result .= $this->EncodeString($this->Body, $this->Encoding);
+                $result .= $this->LE.$this->LE;
+    
+                $result .= $this->EndBoundary($this->boundary[1]);
+                break;
+            case "plain":
+                $result .= $this->EncodeString($this->Body, $this->Encoding);
+                break;
+            case "attachments":
+                $result .= $this->GetBoundary($this->boundary[1], "", "", "");
+                $result .= $this->EncodeString($this->Body, $this->Encoding);
+                $result .= $this->LE;
+     
+                $result .= $this->AttachAll();
+                break;
+            case "alt_attachments":
+                $result .= sprintf("--%s%s", $this->boundary[1], $this->LE);
+                $result .= sprintf("Content-Type: %s;%s" .
+                                   "\tboundary=\"%s\"%s",
+                                   "multipart/alternative", $this->LE, 
+                                   $this->boundary[2], $this->LE.$this->LE);
+    
+                // Create text body
+                $result .= $this->GetBoundary($this->boundary[2], "", 
+                                              "text/plain", "") . $this->LE;
+
+                $result .= $this->EncodeString($this->AltBody, $this->Encoding);
+                $result .= $this->LE.$this->LE;
+    
+                // Create the HTML body
+                $result .= $this->GetBoundary($this->boundary[2], "", 
+                                              "text/html", "") . $this->LE;
+    
+                $result .= $this->EncodeString($this->Body, $this->Encoding);
+                $result .= $this->LE.$this->LE;
+
+                $result .= $this->EndBoundary($this->boundary[2]);
+                
+                $result .= $this->AttachAll();
+                break;
+        }
+        if($this->IsError())
+            $result = "";
+
+        return $result;
+    }
+
+    /**
+     * Returns the start of a message boundary.
+     * @access private
+     */
+    function GetBoundary($boundary, $charSet, $contentType, $encoding) {
+        $result = "";
+        if($charSet == "") { $charSet = $this->CharSet; }
+        if($contentType == "") { $contentType = $this->ContentType; }
+        if($encoding == "") { $encoding = $this->Encoding; }
+
+        $result .= $this->TextLine("--" . $boundary);
+        $result .= sprintf("Content-Type: %s; charset = \"%s\"", 
+                            $contentType, $charSet);
+        $result .= $this->HeaderLine("Content-Transfer-Encoding", $encoding);
+        $result .= $this->LE;
+       
+        return $result;
+    }
+    
+    /**
+     * Returns the end of a message boundary.
+     * @access private
+     */
+    function EndBoundary($boundary) {
+        return $this->LE . "--" . $boundary . "--" . $this->LE; 
+    }
+    
+    /**
+     * Sets the message type.
+     * @access private
+     * @return void
+     */
+    function SetMessageType() {
         if(count($this->attachment) < 1 && strlen($this->AltBody) < 1)
             $this->message_type = "plain";
         else
@@ -845,136 +968,24 @@ class PHPMailer
             if(strlen($this->AltBody) > 0 && count($this->attachment) > 0)
                 $this->message_type = "alt_attachments";
         }
-        
-        switch($this->message_type)
-        {
-            case "plain":
-                $header[] = sprintf("Content-Transfer-Encoding: %s%s", 
-                                    $this->Encoding, $this->LE);
-                $header[] = sprintf("Content-Type: %s; charset=\"%s\"",
-                                    $this->ContentType, $this->CharSet);
-                break;
-            case "attachments":
-            case "alt_attachments":
-                if($this->EmbeddedImageCount() > 0)
-                {
-                    $header[] = sprintf("Content-Type: %s;%s\ttype=\"text/html\";%s\tboundary=\"%s\"%s", 
-                                    "multipart/related", $this->LE, $this->LE, 
-                                    $this->boundary[1], $this->LE);
-                }
-                else
-                {
-                    $header[] = sprintf("Content-Type: %s;%s",
-                                    "multipart/mixed", $this->LE);
-                    $header[] = sprintf("\tboundary=\"%s\"%s", $this->boundary[1], $this->LE);
-                }
-                break;
-            case "alt":
-                $header[] = sprintf("Content-Type: %s;%s",
-                                    "multipart/alternative", $this->LE);
-                $header[] = sprintf("\tboundary=\"%s\"%s", $this->boundary[1], $this->LE);
-                break;
-        }
-
-        // No additional lines when using mail() function
-        if($this->Mailer != "mail")
-            $header[] = $this->LE.$this->LE;
-
-        return join("", $header);
     }
 
     /**
-     * Assembles the message body.  Returns an empty string on failure.
+     * Returns a formatted header line.
      * @access private
      * @return string
      */
-    function CreateBody() {
-        $body = array();
-
-        $this->SetWordWrap();
-
-        switch($this->message_type)
-        {
-            case "alt":
-                $body[] = $this->GetBoundary($this->boundary[1], "", 
-                                             "text/plain", "");
-                $body[] = $this->EncodeString($this->AltBody, $this->Encoding);
-                $body[] = $this->LE.$this->LE;
-                $body[] = $this->GetBoundary($this->boundary[1], "", 
-                                             "text/html", "");
-                
-                $body[] = $this->EncodeString($this->Body, $this->Encoding);
-                $body[] = $this->LE.$this->LE;
-    
-                $body[] = $this->EndBoundary($this->boundary[1]);
-                break;
-            case "plain":
-                $body[] = $this->EncodeString($this->Body, $this->Encoding);
-                break;
-            case "attachments":
-                $body[] = $this->GetBoundary($this->boundary[1], "", "", "");
-                $body[] = $this->EncodeString($this->Body, $this->Encoding);
-                $body[] = $this->LE;
-     
-                $body[] = $this->AttachAll();
-                if($this->IsError()) { return ""; }
-                break;
-            case "alt_attachments":
-                $body[] = sprintf("--%s%s", $this->boundary[1], $this->LE);
-                $body[] = sprintf("Content-Type: %s;%s" .
-                                  "\tboundary=\"%s\"%s",
-                                   "multipart/alternative", $this->LE, 
-                                   $this->boundary[2], $this->LE.$this->LE);
-    
-                // Create text body
-                $body[] = $this->GetBoundary($this->boundary[2], "", 
-                                             "text/plain", "") . $this->LE;
-
-                $body[] = $this->EncodeString($this->AltBody, $this->Encoding);
-                $body[] = $this->LE.$this->LE;
-    
-                // Create the HTML body
-                $body[] = $this->GetBoundary($this->boundary[2], "", 
-                                             "text/html", "") . $this->LE;
-    
-                $body[] = $this->EncodeString($this->Body, $this->Encoding);
-                $body[] = $this->LE.$this->LE;
-
-                $body[] = $this->EndBoundary($this->boundary[2]);
-                
-                $body[] = $this->AttachAll();
-                if($this->IsError()) { return ""; }
-                break;
-        }
-
-        return join("", $body);
+    function HeaderLine($name, $value) {
+        return $name . ": " . $value . $this->LE;
     }
 
     /**
-     * Returns the start of a message boundary.
+     * Returns a formatted mail line.
      * @access private
+     * @return string
      */
-    function GetBoundary($boundary, $charSet, $contentType, $encoding) {
-        $result = array();
-        if($charSet == "") { $charSet = $this->CharSet; }
-        if($contentType == "") { $contentType = $this->ContentType; }
-        if($encoding == "") { $encoding = $this->Encoding; }
-
-        $result[] = "--" . $boundary;
-        $result[] = sprintf("Content-Type: %s; charset = \"%s\"", 
-                            $contentType, $charSet);
-        $result[] = "Content-Transfer-Encoding: " . $encoding;
-        $result[] = $this->LE;
-       
-        return join($this->LE, $result);
-    }
-    
-    /**
-     * Returns the end of a message boundary.
-     * @access private
-     */
-    function EndBoundary($boundary) {
-        return $this->LE . "--" . $boundary . "--" . $this->LE; 
+    function TextLine($value) {
+        return $value . $this->LE;
     }
 
     /////////////////////////////////////////////////
