@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.19, Created 06/22/2001
+// Version 1.20, Created 06/25/2001
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -45,7 +45,8 @@ class phpmailer
    var $ContentType      = "text/plain";
 
    /**
-    * Sets the Encoding of the message. Default value is "8bit".
+    * Sets the Encoding of the message. Options for this are "8bit" (default),
+    * "7bit", "binary", "base64", and "quoted-printable".
     * @public
     * @type string
     */
@@ -59,11 +60,11 @@ class phpmailer
    var $From             = "root@localhost";
 
    /**
-    * Sets the From name of the message. Default value is "root".
+    * Sets the From name of the message. Default value is "Root User".
     * @public
     * @type string
     */
-   var $FromName         = "root";
+   var $FromName         = "Root User";
 
    /**
     * Sets the Sender email of the message. If not empty, will be sent via -f to sendmail
@@ -124,6 +125,13 @@ class phpmailer
     */
    var $UseMSMailHeaders = false;
 
+   /**
+    *  Holds phpmailer version.
+    *  @public
+    *  @type string
+    */
+   var $Version       = "phpmailer [version 1.20]";
+
 
    /////////////////////////////////////////////////
    // SMTP VARIABLES
@@ -170,12 +178,6 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    *  Holds phpmailer version.
-    *  @type string
-    */
-   var $Version       = "phpmailer [version 1.19]";
-
-   /**
     *  Holds all "To" addresses.
     *  @type array
     */
@@ -212,7 +214,7 @@ class phpmailer
    var $CustomHeader  = array();
 
    /**
-    *  Holds the message boundary.
+    *  Holds the message boundary. Default is false.
     *  @type string
     */
    var $boundary      = false;
@@ -222,7 +224,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * IsHTML method sets message type to HTML.  Returns void.
+    * Sets message type to HTML.  Returns void.
     * @public
     * @returns void
     */
@@ -234,7 +236,7 @@ class phpmailer
    }
 
    /**
-    * IsSMTP method sets Mailer to use SMTP.  Returns void.
+    * Sets Mailer to use SMTP.  Returns void.
     * @public
     * @returns void
     */
@@ -243,7 +245,7 @@ class phpmailer
    }
 
    /**
-    * IsMail method sets Mailer to use PHP mail() function.  Returns void.
+    * Sets Mailer to use PHP mail() function.  Returns void.
     * @public
     * @returns void
     */
@@ -252,7 +254,7 @@ class phpmailer
    }
 
    /**
-    * IsSendmail method sets Mailer to use $Sendmail program.  Returns void.
+    * Sets Mailer to use $Sendmail program.  Returns void.
     * @public
     * @returns void
     */
@@ -261,7 +263,7 @@ class phpmailer
    }
 
    /**
-    * IsQmail method sets Mailer to use qmail MTA.  Returns void.
+    * Sets Mailer to use qmail MTA.  Returns void.
     * @public
     * @returns void
     */
@@ -277,7 +279,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * AddAddress method adds a "to" address.  Returns void.
+    * Adds a "to" address.  Returns void.
     * @public
     * @returns void
     */
@@ -288,7 +290,7 @@ class phpmailer
    }
 
    /**
-    * AddCC method adds a "cc" address.  Returns void.
+    * Adds a "cc" address.  Returns void.
     * @public
     * @returns void
     */
@@ -299,7 +301,7 @@ class phpmailer
    }
 
    /**
-    * AddBCC method adds a "bcc" address.  Returns void.
+    * Adds a "bcc" address.  Returns void.
     * @public
     * @returns void
     */
@@ -310,7 +312,7 @@ class phpmailer
    }
 
    /**
-    * AddReplyTo method adds a "Reply-to" address.  Returns void.
+    * Adds a "Reply-to" address.  Returns void.
     * @public
     * @returns void
     */
@@ -326,7 +328,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * Send method creates message and assigns Mailer.  Returns bool.
+    * Creates message and assigns Mailer.  Returns bool.
     * @public
     * @returns bool
     */
@@ -367,7 +369,7 @@ class phpmailer
    }
 
    /**
-    * sendmail_send method sends mail using the $Sendmail program.  Returns bool.
+    * Sends mail using the $Sendmail program.  Returns bool.
     * @private
     * @returns bool
     */
@@ -391,7 +393,7 @@ class phpmailer
    }
 
    /**
-    * mail_send method sends mail using the PHP mail() function.  Returns bool.
+    * Sends mail using the PHP mail() function.  Returns bool.
     * @private
     * @returns bool
     */
@@ -425,7 +427,7 @@ class phpmailer
    }
 
    /**
-    * smtp_send method sends mail via SMTP using PhpSMTP (Author:
+    * Sends mail via SMTP using PhpSMTP (Author:
     * Chris Ryan).  Returns bool.
     * @private
     * @returns bool
@@ -485,7 +487,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * addr_append method creates recipient headers.  Returns string.
+    * Creates recipient headers.  Returns string.
     * @private
     * @returns string
     */
@@ -507,7 +509,7 @@ class phpmailer
    }
 
    /**
-    * wordwrap wraps message for use with mailers that don't
+    * Wraps message for use with mailers that don't
     * automatically perform wrapping and for quoted-printable.
     * Original written by philippe.  Returns string.
     * @private
@@ -592,7 +594,7 @@ class phpmailer
    }
 
    /**
-    * create_header assembles message header.  Returns a string if successful
+    * Assembles message header.  Returns a string if successful
     * or false if unsuccessful.
     * @private
     * @returns string
@@ -652,7 +654,7 @@ class phpmailer
    }
 
    /**
-    * create_body assembles the message body.  Returns a string if successful
+    * Assembles the message body.  Returns a string if successful
     * or false if unsuccessful.
     * @private
     * @returns string
@@ -681,7 +683,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * AddAttachment check if attachment is valid and add to list.
+    * Checks if attachment is valid and add to list.
     * Returns false if the file was not found.
     * @public
     * @returns bool
@@ -709,7 +711,7 @@ class phpmailer
    }
 
    /**
-    * attach_all attach text and binary attachments to body.  Returns a
+    * Attaches text and binary attachments to body.  Returns a
     * string if successful or false if unsuccessful.
     * @private
     * @returns string
@@ -747,7 +749,7 @@ class phpmailer
    }
 
    /**
-    * encode_file encode attachment in requested format.  Returns a
+    * Encodes attachment in requested format.  Returns a
     * string if successful or false if unsuccessful.
     * @private
     * @returns string
@@ -766,7 +768,7 @@ class phpmailer
    }
 
    /**
-    * encode_string encode string to requested format.  Returns a
+    * Encodes string to requested format. Returns a
     * string if successful or false if unsuccessful.
     * @private
     * @returns string
@@ -801,7 +803,7 @@ class phpmailer
    }
 
    /**
-    * encode_qp encode string to quoted-printable.  Returns a string.
+    * Encode string to quoted-printable.  Returns a string.
     * @private
     * @returns string
     */
@@ -826,7 +828,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * ClearAddresses clears all recipients assigned in the TO array.  Returns void.
+    * Clears all recipients assigned in the TO array.  Returns void.
     * @public
     * @returns void
     */
@@ -835,7 +837,7 @@ class phpmailer
    }
 
    /**
-    * ClearCCs clears all recipients assigned in the CC array.  Returns void.
+    * Clears all recipients assigned in the CC array.  Returns void.
     * @public
     * @returns void
     */
@@ -844,7 +846,7 @@ class phpmailer
    }
 
    /**
-    * ClearBCCs clears all recipients assigned in the BCC array.  Returns void.
+    * Clears all recipients assigned in the BCC array.  Returns void.
     * @public
     * @returns void
     */
@@ -853,7 +855,7 @@ class phpmailer
    }
 
    /**
-    * ClearReplyTos clears all recipients assigned in the ReplyTo array.  Returns void.
+    * Clears all recipients assigned in the ReplyTo array.  Returns void.
     * @public
     * @returns void
     */
@@ -862,7 +864,7 @@ class phpmailer
    }
 
    /**
-    * ClearAllRecipients clears all recipients assigned in the TO, CC and BCC
+    * Clears all recipients assigned in the TO, CC and BCC
     * array.  Returns void.
     * @public
     * @returns void
@@ -874,7 +876,7 @@ class phpmailer
    }
 
    /**
-    * ClearAddresses clears all previously set attachments.  Returns void.
+    * Clears all previously set attachments.  Returns void.
     * @public
     * @returns void
     */
@@ -883,7 +885,7 @@ class phpmailer
    }
 
    /**
-    * ClearCustomHeaders clears all custom headers.  Returns void.
+    * Clears all custom headers.  Returns void.
     * @public
     * @returns void
     */
@@ -897,7 +899,7 @@ class phpmailer
    /////////////////////////////////////////////////
 
    /**
-    * error_handler prints out structured errors.  Returns void.
+    * Prints out structured errors.  Returns void.
     * @private
     * @returns void
     */
@@ -911,7 +913,7 @@ class phpmailer
    }
 
    /**
-    * fix_eol changes every end of line from CR or LF to CRLF.  Returns string.
+    * Changes every end of line from CR or LF to CRLF.  Returns string.
     * @private
     * @returns string
     */
@@ -923,7 +925,7 @@ class phpmailer
    }
 
    /**
-    * AddCustomHeader adds a custom header.  Returns void.
+    * Adds a custom header.  Returns void.
     * @public
     * @returns void
     */
@@ -932,8 +934,8 @@ class phpmailer
    }
 
    /**
-    * AddMSMailHeaders adds all the Microsoft message headers.  Returns string.
-    * @public
+    * Adds all the Microsoft message headers.  Returns string.
+    * @private
     * @returns string
     */
    function AddMSMailHeaders() {
@@ -949,16 +951,6 @@ class phpmailer
       $MSHeader .= sprintf("Importance: %s\r\n", $MSPriority);
 
       return($MSHeader);
-   }
-
-   /**
-    * PrintVersion prints out the version number of phpmailer.  Returns void.
-    * @public
-    * @returns void
-    */
-   function PrintVersion() {
-      //printf("<h5><a href=\"http://phpmailer.sourceforge.net\">%s</a></h5>", $this->Version);
-      printf("%s", $this->Version);
    }
 
 }
