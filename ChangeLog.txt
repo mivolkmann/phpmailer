@@ -1,5 +1,7 @@
 ChangeLog
 
+* quoted-encoding should now encode NULs \000
+* Fixed encoding of body/AltBody (#553370)
 * Adds "To: undisclosed-recipients:;" when all recipients are hidden (BCC)
 
 Version 1.65 (Fri, Aug 09 2002)
