@@ -29,8 +29,8 @@ class my_phpmailer extends phpmailer {
 	// Set default variables for all new objects
 	var $From = "from@email.com";
 	var $FromName = "Mailer";
-	var $Host = "smtp1.site.com;smtp2.site.com";
-	var $Mailer = "sendmail";  // Alternative to IsSendmail()
+	var $Host = "smtp1.site.com;smtp2.site.com";  // specify primary & backup SMTP servers
+	var $Mailer = "smtp";  // Alternative to IsSMTP()
 	var $WordWrap = 75;
 	
 	// Replace the default error_handler
@@ -67,7 +67,7 @@ $mail->AddAddress("josh@site.com", "Josh Adams");
 $mail->Subject = "Here is the subject";
 $mail->Body = "This is the message body";
 $mail->AddAttachment("c:/temp/11-10-00.zip");
-$mail->Send(); // send message
+$mail->Send();
 
 echo "Message was sent successfully";
 </pre>
