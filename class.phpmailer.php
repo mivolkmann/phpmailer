@@ -19,7 +19,7 @@ class phpmailer
 	// CLASS VARIABLES
 	/////////////////////////////////////////////////
 	
-	// General Variables
+	// "Public" Variables
 	var $Priority         = 3;
 	var $CharSet          = "iso-8859-1";
 	var $ContentType      = "text/plain";
@@ -34,7 +34,7 @@ class phpmailer
 	var $MailerDebug      = true;
 	var $UseMSMailHeaders = false;
 
-	// SMTP-specific variables
+	// SMTP "Public" variables
 	var $Host        = "localhost";
 	var $Port        = 25;
 	var $Helo        = "localhost.localdomain";
@@ -42,7 +42,7 @@ class phpmailer
 	var $SMTPDebug   = false;
 	
 	// "Private" variables
-	var $Version       = "phpmailer [version 1.03]";
+	var $Version       = "phpmailer [version 1.05]";
 	var $to            = array();
 	var $cc            = array();
 	var $bcc           = array();
@@ -50,7 +50,6 @@ class phpmailer
 	var $attachment    = array();
 	var $CustomHeader  = array();	
 	var $boundary      = false;
-	var $SMTPInclude   = false;
 	
 	/////////////////////////////////////////////////
 	// VARIABLE METHODS
@@ -145,10 +144,10 @@ class phpmailer
 	
 	// Send using the $sendmail program
 	function sendmail_send($header, $body) {
-		$sendmail = sprintf("%s -f %s -t", $this->Sendmail, $this->From);
+		$sendmail = sprintf("%s -t", $this->Sendmail);
 
 		if(!@$mail = popen($sendmail, "w"))
-			$this->error_handler(sprintf("Could not open %s", $this->Sendmail));
+			$this->error_handler(sprintf("Could not execute %s", $this->Sendmail));
 		
 		fputs($mail, $header);
 		fputs($mail, $body);
@@ -174,11 +173,8 @@ class phpmailer
 	// PhpSMTP written by Chris Ryan
 	function smtp_send($header, $body) {
 	   // Include SMTP class code, but not twice
-	   if($this->SMTPInclude == false)
-	   {
-	      include("class.smtp.php"); // Load code only if asked
-	      $this->SMTPInclude = true;
-	   }
+      include_once("class.smtp.php"); // Load code only if asked
+
 		$smtp = new SMTP;
 		$smtp->do_debug = $this->SMTPDebug;
 		
@@ -191,10 +187,7 @@ class phpmailer
 		while($index < count($hosts) && $connection == false)
 		{
 			if($smtp->Connect($hosts[$index], $this->Port, $this->Timeout))
-			{
 				$connection = true;
-				break;
-			}
 			//printf("%s host could not connect<br>", $hosts[$index]); //debug only
 			$index++;
 		}
@@ -323,28 +316,17 @@ class phpmailer
 	// ATTACHMENT METHODS
 	/////////////////////////////////////////////////
 
-	// Check if attachment is valid and add to list			
+	// Check if attachment is valid and add to list
 	function AddAttachment($path) {
 		if(!@is_file($path))
 			$this->error_handler(sprintf("Could not find %s file on filesystem", $path));
-
-		// Separate file name from full path
-		$separator = "/";
-		$len = strlen($path);
-		
-		// Set $separator to win32 style
-		if(!ereg($separator, $path))
-			$separator = "\\";
-		
-		// Get the filename from the path
-		$pos = strrpos($path, $separator) + 1;
-		$filename = substr($path, $pos, $len);
+		$filename = basename($path);
 		
 		// Set message boundary
 		$this->boundary = "_b" . md5(uniqid(time()));
 
 		// Append to $attachment array
-		$cur = count($this->attachment);		
+		$cur = count($this->attachment);
 		$this->attachment[$cur][0] = $path;
 		$this->attachment[$cur][1] = $filename;
 	}
@@ -462,7 +444,6 @@ class phpmailer
 	      
 	   $MSHeader .= sprintf("X-MSMail-Priority: %s\n", $MSPriority);
 	   $MSHeader .= sprintf("Importance: %s\n", $MSPriority);
-	   // X-Priority: 1 (Highest)
 	   return($MSHeader);
 	}
 	

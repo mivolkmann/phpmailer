@@ -1,5 +1,10 @@
 ChangeLog
 
+Version 1.05 (Tue, May 29 2001)
+* Code cleanup
+* Eliminated sendmail header warning message
+* Fixed possible SMTP error
+
 Version 1.03 (Thu, May 24 2001)
 * Fixed problem where qmail sends out duplicate messages
 
