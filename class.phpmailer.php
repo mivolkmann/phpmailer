@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // phpmailer - PHP email class
 //
-// Version 1.50, Created 11/08/2001
+// Version 1.54, Created 12/19/2001
 //
 // Class for sending email using either
 // sendmail, PHP mail(), or SMTP.  Methods are
@@ -143,7 +143,7 @@ class phpmailer
      *  @public
      *  @type string
      */
-    var $Version           = "1.50";
+    var $Version           = "1.54";
 
 
     /////////////////////////////////////////////////
@@ -397,7 +397,10 @@ class phpmailer
      * @returns bool
      */
     function Send() {
-        if(count($this->to) < 1)
+        $header = "";
+        $body = "";
+
+        if((count($this->to) + count($this->cc) + count($this->bcc)) < 1)
         {
             $this->error_handler("You must provide at least one recipient email address");
             return false;
@@ -846,7 +849,7 @@ class phpmailer
         $header = array();
 
         // To be created automatically by mail()
-        if($this->Mailer != "mail")
+        if(($this->Mailer != "mail") && (count($this->to) > 0))
             $header[] = $this->addr_append("To", $this->to);
 
         $header[] = sprintf("From: \"%s\" <%s>\r\n", addslashes($this->FromName), trim($this->From));
@@ -908,6 +911,8 @@ class phpmailer
      * @returns string
      */
     function create_body() {
+        $body = "";
+
         // wordwrap the message body if set
         if($this->WordWrap)
             $this->Body = $this->wordwrap($this->Body, $this->WordWrap);
@@ -941,21 +946,18 @@ class phpmailer
 
             $mime[] = sprintf("\r\n--Boundary-=%s--\r\n", $this->boundary);
 
-            $this->Body = $this->encode_string(join("", $mime), $this->Encoding);
+            $body = $this->encode_string(join("", $mime), $this->Encoding);
         }
         else
         {
-            $this->Body = $this->encode_string($this->Body, $this->Encoding);
-        }
+            $body = $this->encode_string($this->Body, $this->Encoding);
 
-
-        if(count($this->attachment) > 0)
-        {
-            if(!$body = $this->attach_all())
-                return false;
+            if(count($this->attachment) > 0)
+            {
+                if(!$body = $this->attach_all($body))
+                    return false;
+            }
         }
-        else
-            $body = $this->Body;
 
         return($body);
     }
@@ -1003,7 +1005,7 @@ class phpmailer
      * @private
      * @returns string
      */
-    function attach_all() {
+    function attach_all($body) {
         // Return text of body
         $mime = array();
         $mime[] = "This is a MIME message. If you are reading this text, you\r\n";
@@ -1026,7 +1028,7 @@ class phpmailer
             $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
             $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
             $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-            $mime[] = sprintf("%s\r\n\r\n", $this->Body);
+            $mime[] = sprintf("%s\r\n\r\n", $body);
 
             $mime[] = sprintf("\r\n--Boundary-=%s--\r\n\r\n", $this->subboundary);
         }
