@@ -258,7 +258,7 @@ class phpmailer
    var $boundary      = false;
 
    /**
-    *  Holds the message boundary. This is used specifically 
+    *  Holds the message boundary. This is used specifically
     *  when multipart/alternative messages are sent. Default is false.
     *  @type string
     */
@@ -556,7 +556,7 @@ class phpmailer
       for($i = 0; $i < count($this->bcc); $i++)
          $smtp->Recipient(sprintf("<%s>", $this->bcc[$i][0]));
 
-      if(!$smtp->Data(sprintf("%s%s", trim($header), trim($body))))
+      if(!$smtp->Data(sprintf("%s%s", $header, $body)))
       {
          $this->error_handler("SMTP Error: Data not accepted");
          return false;
@@ -760,26 +760,26 @@ class phpmailer
          $mime[] = "might want to consider changing to a mail reader that\r\n";
          $mime[] = "understands how to properly display MIME multipart messages.\r\n\r\n";
          $mime[] = sprintf("--Boundary-=%s\r\n", $this->boundary);
-      
+
          // Insert body. If multipart/alternative, insert both html and plain
-         $mime[] = sprintf("Content-Type: %s; charset = \"%s\"; boundary = \"Boundary-=%s\";\r\n", 
+         $mime[] = sprintf("Content-Type: %s; charset = \"%s\"; boundary = \"Boundary-=%s\";\r\n",
                            $this->ContentType, $this->CharSet, $this->subboundary);
          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-      
+
          $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
          $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
          $mime[] = sprintf("%s\r\n\r\n", $this->Body_mp_html);
-        
+
          $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
          $mime[] = sprintf("Content-Type: text/plain; charset = \"%s\";\r\n", $this->CharSet);
          $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
          $mime[] = sprintf("%s\r\n\r\n", $this->Body_mp_plain);
-        
+
          $mime[] = sprintf("\r\n--Boundary-=%s--\r\n\r\n", $this->subboundary);
-                   
+
          $mime[] = sprintf("\r\n--Boundary-=%s--\r\n", $this->boundary);
-        
+
          $this->Body = $this->encode_string(join("", $mime), $this->Encoding);
       }
       else
@@ -848,24 +848,24 @@ class phpmailer
       $mime[] = "might want to consider changing to a mail reader that\r\n";
       $mime[] = "understands how to properly display MIME multipart messages.\r\n\r\n";
       $mime[] = sprintf("--Boundary-=%s\r\n", $this->boundary);
-      
+
       // Insert body. If multipart/alternative, insert both html and plain.
       if (!empty($this->AltBody))
       {
-          $mime[] = sprintf("Content-Type: %s; charset = \"%s\"; boundary = \"Boundary-=%s\";\r\n", 
+          $mime[] = sprintf("Content-Type: %s; charset = \"%s\"; boundary = \"Boundary-=%s\";\r\n",
                             $this->ContentType, $this->CharSet, $this->subboundary);
           $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
-            
+
           $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
           $mime[] = sprintf("Content-Type: text/html; charset = \"%s\";\r\n", $this->CharSet);
           $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
           $mime[] = sprintf("%s\r\n\r\n", $this->Body);
-            
+
           $mime[] = sprintf("--Boundary-=%s\r\n", $this->subboundary);
           $mime[] = sprintf("Content-Type: text/plain; charset = \"%s\";\r\n", $this->CharSet);
           $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
           $mime[] = sprintf("%s\r\n\r\n", $this->AltBody);
-            
+
           $mime[] = sprintf("\r\n--Boundary-=%s--\r\n\r\n", $this->subboundary);
       }
       else
@@ -873,7 +873,7 @@ class phpmailer
           $mime[] = sprintf("Content-Type: %s; charset = \"%s\";\r\n", $this->ContentType, $this->CharSet);
           $mime[] = sprintf("Content-Transfer-Encoding: %s\r\n\r\n", $this->Encoding);
           $mime[] = sprintf("%s\r\n", $this->Body);
-      }      
+      }
 
       // Add all attachments
       for($i = 0; $i < count($this->attachment); $i++)
