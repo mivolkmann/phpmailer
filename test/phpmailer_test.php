@@ -78,6 +78,7 @@ class phpmailerTest extends TestCase
         $this->Mail->Password = "";
         $this->Mail->PluginDir = $INCLUDE_DIR;
 		$this->Mail->AddReplyTo("no_reply@phpmailer.sf.net", "Reply Guy");
+        $this->Mail->Sender = "nobody@example.com";
 
         if(strlen($this->Mail->Host) > 0)
             $this->Mail->Mailer = "smtp";
@@ -88,9 +89,10 @@ class phpmailerTest extends TestCase
         }
         
         global $global_vars;
-        $this->SetAddress($global_vars["mail_to"]);
-        
-        // This is where you might place additional To, Bcc, etc addresses
+        $this->SetAddress($global_vars["mail_to"], "Test User");
+        $this->SetAddress("matzelle@hotmail.com", "Hello");
+        if(strlen($global_vars["mail_cc"]) > 0)
+            $this->SetAddress($global_vars["mail_cc"], "Carbon User", "cc");
     }     
 
     /**
@@ -472,6 +474,18 @@ class phpmailerTest extends TestCase
         fclose($fp);
     }    
 
+    function test_MultipleSend() {
+        $this->Mail->Body = "Sending two messages without keepalive";
+        $this->BuildBody();
+        $subject = $this->Mail->Subject;
+
+        $this->Mail->Subject = $subject . ": SMTP 1";
+        $this->assert($this->Mail->Send(), $this->Mail->ErrorInfo);
+        
+        $this->Mail->Subject = $subject . ": SMTP 2";
+        $this->assert($this->Mail->Send(), $this->Mail->ErrorInfo);
+    }
+
     function test_SmtpKeepAlive() {
         $this->Mail->Body = "This was done using the SMTP keep-alive.";
         $this->BuildBody();
@@ -489,7 +503,7 @@ class phpmailerTest extends TestCase
     function test_Error() {
         $this->BuildBody();
         $this->Mail->Subject .= ": This should not be sent";
-        $this->Mail->ClearAddresses(); // no addresses should cause an error
+        $this->Mail->ClearAllRecipients(); // no addresses should cause an error
         $this->assert($this->Mail->IsError() == false, "Error found");
         $this->assert($this->Mail->Send() == false, "Send succeeded");
         $this->assert($this->Mail->IsError(), "No error found");
@@ -536,7 +550,7 @@ By entering a SMTP hostname it will automatically perform tests with SMTP.
 <input type="hidden" name="submitted" value="1"/>
 To Address: <input type="text" size="50" name="mail_to" value="<?php echo get("mail_to"); ?>"/>
 <br/>
-Bcc Address: <input type="text" size="50" name="mail_bcc" value="<?php echo get("mail_bcc"); ?>"/>
+Cc Address: <input type="text" size="50" name="mail_cc" value="<?php echo get("mail_cc"); ?>"/>
 <br/>
 SMTP Hostname: <input type="text" size="50" name="mail_host" value="<?php echo get("mail_host"); ?>"/>
 <p/>
