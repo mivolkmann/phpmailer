@@ -1,5 +1,8 @@
 ChangeLog
 
+Version 1.48 (Thu, Nov 08 2001)
+* Added check for OS version to fix Body bug
+
 Version 1.47 (Tue, Oct 16 2001)
 * Fixed Received header code format
 * Fixed AltBody order error
