@@ -116,12 +116,18 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 <td class="greytab">int WordWrap</td>
 <td class="whitetab">Set word wrap on message body</td>
 <td class="default">false (off)</td>
-<tr>
+</tr>
 <tr>
 <td class="greytab">bool MailerDebug</td>
 <td class="whitetab">Turn debugging on or off</td>
 <td class="default">true (on)</td>
+</tr>
 <tr>
+<td class="greytab">bool UseMSMailHeaders</td>
+<td class="whitetab">Use Microsoft mail client message headers 
+(affects message priority)</td>
+<td class="default">false (off)</td>
+</tr>
 </table>
 </p>
 
@@ -220,12 +226,26 @@ $mail->AddCC("roger@email.com", "Roger Opus");
 <td>
 </tr>
 <tr>
+<td class="greytab2">AddCustomHeader(string header)</td>
+<td class="whitetab2">Add a custom email header</td>
+<td>
+</tr>
+<tr>
 <td class="greytab2">Send()</td>
 <td class="whitetab2">Send the message</td>
 <td>
 </tr>
+<tr>
+<td class="greytab2">PrintVersion()</td>
+<td class="whitetab2">Print out the version number of phpmailer</td>
+<td>
+</tr>
 </table>
+<p>
 
+<b>Request enhancements and submit bugs 
+<a href="http://sourceforge.net/projects/phpmailer">here</a>
+</b>
 
 </body>
 </html>

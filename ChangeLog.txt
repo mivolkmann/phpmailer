@@ -1,5 +1,13 @@
 ChangeLog
 
+Version 0.98 (Tue, May 22 2001)
+* Fixed problem with redundant mail hosts sending out multiple messages
+* Added additional error handler code
+* Added AddCustomHeader() function
+* Added support for Microsoft mail client headers (affects priority)
+* Fixed small bug with Mailer variable
+* Added PrintVersion() function
+
 Version 0.92 (Tue, May 15 2001)
 * Changed file names to class.phpmailer.php and class.smtp.php to match
   current PHP class trend.
