@@ -151,8 +151,8 @@ class phpmailer
 
     /**
      *  Sets the SMTP hosts.  All hosts must be separated by a
-     *  semicolon.  You can also specify a different default port 
-     *  for each host by using this format: [hostname:port] 
+     *  semicolon.  You can also specify a different default port
+     *  for each host by using this format: [hostname:port]
      *  (e.g. Host("smtp1.domain.com:25;smtp2.domain.com").
      *  Hosts will be tried in order.
      *  Default value is "localhost".
@@ -503,8 +503,8 @@ class phpmailer
 
     /**
      * Sends mail via SMTP using PhpSMTP (Author:
-     * Chris Ryan).  Returns bool.  Returns false if there is a 
-     * bad MAIL FROM, RCPT, or DATA input. 
+     * Chris Ryan).  Returns bool.  Returns false if there is a
+     * bad MAIL FROM, RCPT, or DATA input.
      * @private
      * @returns bool
      */
@@ -530,7 +530,7 @@ class phpmailer
             list($host, $port) = explode(":", $hosts[$index]);
             if ($port === NULL)
                 $port = $this->Port;
-            
+
             //if($smtp->Connect($hosts[$index], $this->Port, $this->Timeout))
             if($smtp->Connect($host, $port, $this->Timeout))
                 $connection = true;
@@ -584,7 +584,7 @@ class phpmailer
             if(!$smtp->Recipient(sprintf("<%s>", $this->bcc[$i][0])))
                 $bad_rcpt[] = $this->bcc[$i][0];
         }
-        
+
         // Create error message
         if(count($bad_rcpt) > 0)
         {
@@ -599,7 +599,7 @@ class phpmailer
 
             return false;
         }
-            
+
 
         if(!$smtp->Data(sprintf("%s%s", $header, $body)))
         {
@@ -731,6 +731,7 @@ class phpmailer
      */
     function create_header() {
         $header = array();
+        $header[] = $this->received();
         $header[] = sprintf("Date: %s\r\n", $this->rfc_date());
 
         // To be created automatically by mail()
@@ -854,7 +855,7 @@ class phpmailer
      * Adds an attachment from the OS filesystem.
      * Checks if attachment is valid and then adds
      * the attachment to the list.
-     * Returns false if the file could not be found 
+     * Returns false if the file could not be found
      * or accessed.
      * @public
      * @returns bool
@@ -1155,6 +1156,32 @@ class phpmailer
         $tz = ($tz/3600)*100 + ($tz%3600)/60;
         $date = sprintf("%s %s%04d", date("D, j M Y H:i:s"), $tzs, $tz);
         return $date;
+    }
+
+    /**
+     * Returns received header for message tracing. Returns string.
+     * @private
+     * @returns string
+     */
+    function received() {
+        global $HTTP_SERVER_VARS;
+        global $HTTP_ENV_VARS;
+
+        // IIS & Apache use different global variables
+        if($HTTP_SERVER_VARS["REMOTE_ADDR"] == "")
+            $http_vars = $HTTP_ENV_VARS; // Apache found
+        else
+            $http_vars = $HTTP_SERVER_VARS; // IIS found
+
+        $str = sprintf("Received: from web browser (%s [%s]) by %s\r\n" .
+               "with HTTP (%s); %s\r\n",
+               $http_vars["HTTP_USER_AGENT"],
+               $http_vars["REMOTE_ADDR"],
+               $http_vars["SERVER_NAME"],
+               $http_vars["SERVER_SOFTWARE"],
+               $this->rfc_date());
+
+        return $str;
     }
 
     /**

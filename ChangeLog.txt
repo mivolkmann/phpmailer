@@ -3,6 +3,7 @@ ChangeLog
 Version 1.45 (Tue, Sep 25 2001)
 * Added enhanced SMTP debug support
 * Added support for multiple ports on SMTP
+* Added Received header for tracing
 * Fixed AddStringAttachment encoding
 * Fixed possible header name quote bug
 * Fixed wordwrap() trim bug
