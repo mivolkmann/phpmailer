@@ -1,5 +1,7 @@
 ChangeLog
 
+* Adds "To: undisclosed-recipients:;" when all recipients are hidden (BCC)
+
 Version 1.65 (Fri, Aug 09 2002)
 * Fixed non-visible attachment bug (#585097) for Outlook
 * SMTP connections are now closed after each transaction
