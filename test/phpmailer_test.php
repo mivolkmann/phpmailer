@@ -4,7 +4,7 @@
   Type: phpmailer class
 ********************/
 
-$INCLUDE_DIR = "";
+$INCLUDE_DIR = "../";
 
 require("phpunit.php");
 require($INCLUDE_DIR . "class.phpmailer.php");
@@ -299,7 +299,7 @@ class phpmailerTest extends TestCase
         $this->Mail->Body = "Here is the text body";
         $this->Mail->Subject .= ": Plain + Multiple FileAttachments";
 
-        if(!$this->Mail->AddAttachment("rocks.png"))
+        if(!$this->Mail->AddAttachment("test.png"))
         {
             $this->assert(false, $this->Mail->ErrorInfo);
             return;
@@ -392,7 +392,7 @@ class phpmailerTest extends TestCase
         $this->Mail->Subject .= ": Embedded Image";
         $this->Mail->IsHTML(true);
         
-        if(!$this->Mail->AddEmbeddedImage("rocks.png", "my-attach", "rocks.png",
+        if(!$this->Mail->AddEmbeddedImage("test.png", "my-attach", "test.png",
                                           "base64", "image/png"))
         {
             $this->assert(false, $this->Mail->ErrorInfo);
@@ -413,7 +413,7 @@ class phpmailerTest extends TestCase
         $this->Mail->Subject .= ": Embedded Image + Attachment";
         $this->Mail->IsHTML(true);
         
-        if(!$this->Mail->AddEmbeddedImage("rocks.png", "my-attach", "rocks.png",
+        if(!$this->Mail->AddEmbeddedImage("test.png", "my-attach", "test.png",
                                           "base64", "image/png"))
         {
             $this->assert(false, $this->Mail->ErrorInfo);
