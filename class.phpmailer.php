@@ -125,7 +125,7 @@ class PHPMailer
      *  Holds PHPMailer version.
      *  @var string
      */
-    var $Version           = "1.72";
+    var $Version           = "1.73";
 
     /**
      * Sets the email address that a reading confirmation will be sent.
@@ -740,7 +740,7 @@ class PHPMailer
         {
            case "alt":
               // fall through
-           case "alt_attachment":
+           case "alt_attachments":
               $this->AltBody = $this->WrapText($this->AltBody, $this->WordWrap);
               break;
            default:
