@@ -1,5 +1,7 @@
 ChangeLog
 
+* Fixed RFCDate() for timezones not on the hour (#1564797)
+
 Version 1.73 (Sun, Jun 10 2005)
 * Fixed denial of service bug: http://www.cybsec.com/vuln/PHPMailer-DOS.pdf
 * Now has a total of 20 translations
