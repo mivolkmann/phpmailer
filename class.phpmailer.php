@@ -925,7 +925,7 @@ class PHPMailer
         if($encoding == "") { $encoding = $this->Encoding; }
 
         $result .= $this->TextLine("--" . $boundary);
-        $result .= sprintf("Content-Type: %s; charset = \"%s\"", 
+        $result .= sprintf("Content-Type: %s; charset=\"%s\"", 
                             $contentType, $charSet);
         $result .= $this->LE;
         $result .= $this->HeaderLine("Content-Transfer-Encoding", $encoding);
