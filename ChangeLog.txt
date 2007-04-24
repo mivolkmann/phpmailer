@@ -1,5 +1,8 @@
 ChangeLog
 
+* Fixed the safe mode checking to detect current setting no matter
+which representation was used to set it (#1158158)
+* Removed spaces in charset declaration (#1292500, #1604507)
 * Fixed RFCDate() for timezones not on the hour (#1564797)
 
 Version 1.73 (Sun, Jun 10 2005)
