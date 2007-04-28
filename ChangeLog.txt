@@ -1,5 +1,6 @@
 ChangeLog
-
+* Updated Norwegian translation (#1471311)
+* Fixed setLanguage making false assumptions (#1560188, #1440002, #1237302)
 * Fixed the safe mode checking to detect current setting no matter
 which representation was used to set it (#1158158)
 * Removed spaces in charset declaration (#1292500, #1604507)
@@ -12,7 +13,7 @@ Version 1.73 (Sun, Jun 10 2005)
 
 Version 1.72 (Wed, May 25 2004)
 * Added Dutch, Swedish, Czech, Norwegian, and Turkish translations.
-* Received: Removed this method because spam filter programs like 
+* Received: Removed this method because spam filter programs like
 SpamAssassin reject this header.
 * Fixed error count bug.
 * SetLanguage default is now "language/".
