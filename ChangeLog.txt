@@ -1,4 +1,5 @@
 ChangeLog
+* Fixed SmtpConnect (#846764)
 * Updated Norwegian translation (#1471311)
 * Fixed setLanguage making false assumptions (#1560188, #1440002, #1237302)
 * Fixed the safe mode checking to detect current setting no matter

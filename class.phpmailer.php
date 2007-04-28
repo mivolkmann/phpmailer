@@ -612,6 +612,7 @@ class PHPMailer
                     $this->smtp->Hello($this->ServerHostname());
                 }
 
+                $connection = true;
                 if ($this->SMTPAuth) {
                     if (!$this->smtp->Authenticate($this->Username,
                                                   $this->Password)) {
@@ -620,7 +621,6 @@ class PHPMailer
                         $connection = false;
                     }
                 }
-                $connection = true;
             }
             $index++;
         }
