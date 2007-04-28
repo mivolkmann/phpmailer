@@ -464,6 +464,17 @@ class PHPMailer
             if ($i != 0) {
                 $to .= ", ";
             }
+
+            // This will not use the name in the header using
+            // mail.
+            // If you want to force phpmailer to append the name
+            // you should substitute the following line with this
+            // $to .= $this->AddrFormat($this->to[$i]);
+            // The to parameter should not be an address
+            // in the form of "Something <someone@example.com>".
+            // The mail command may not parse this properly while
+            // talking with the MTA (Particularly under Windows).
+
             $to .= $this->to[$i][0];
         }
 
