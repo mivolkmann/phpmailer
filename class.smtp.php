@@ -212,7 +212,7 @@ class SMTP
     /**
      * Returns true if connected to a server otherwise false
      *
-     * @access private
+     * @access public
      *
      * @return bool
      */
