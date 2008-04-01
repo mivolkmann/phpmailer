@@ -7,6 +7,7 @@ $mail    = new PHPMailer();
 $body    = $mail->getFile('contents.html');
 
 $body    = eregi_replace("[\]",'',$body);
+$subject = eregi_replace("[\]",'',$subject);
 
 $mail->From     = "name@yourdomain.com";
 $mail->FromName = "First Last";
