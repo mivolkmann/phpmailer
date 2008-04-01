@@ -23,18 +23,6 @@
 | - Technology Consulting                                                   |
 | - Oursourcing (highly qualified programmers and graphic designers)        |
 '---------------------------------------------------------------------------'
-*/
-
-/**
- * PHPMailer - PHP email transport class
- * @package PHPMailer
- * @author Andy Prevost
- * @author Brent R. Matzelle
- * @copyright Copyright (c) 2004 - 2007 Andy Prevost
- * @copyright Copyright (c) 2001 - 2003 Brent R. Matzelle
- * @license http://www.gnu.org/copyleft/lesser.html Distributed under the Lesser General Public License (LGPL)
- * @version $Id$
- */
 
 /**
  * SMTP is rfc 821 compliant and implements all the rfc 821 SMTP

@@ -23,22 +23,6 @@
 | - Technology Consulting                                                   |
 | - Oursourcing (highly qualified programmers and graphic designers)        |
 '---------------------------------------------------------------------------'
-*/
-
-/**
- * PHPMailer - PHP email transport class
- * @package PHPMailer
- * @author Richard Davey <rich@corephp.co.uk>
- * @author Andy Prevost
- * @author Brent R. Matzelle
- * @copyright Copyright (c) 2004 - 2007 Andy Prevost
- * @copyright Copyright (c) 2001 - 2003 Brent R. Matzelle
- * @license http://www.gnu.org/copyleft/lesser.html Distributed under the Lesser General Public License (LGPL)
- * @link http://phpmailer.sourceforge.net Info
- * @link http://sourceforge.net/projects/phpmailer/ Support
- * @link http://www.codeworxtech.com/ Maintainer
- * @version $Id$
- */
 
 /**
  * POP Before SMTP Authentication Class
